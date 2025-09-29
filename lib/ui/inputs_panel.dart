@@ -183,53 +183,26 @@ class _InputsPanelState extends ConsumerState<InputsPanel> {
   }
 
   Widget _buildLocationChip(BuildContext context, WidgetRef ref, LocationItem location) {
-    return Container(
-      decoration: BoxDecoration(
-        color: location.active ? Color(location.colorValue).withOpacity(0.1) : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: location.active ? Color(location.colorValue) : Colors.grey.shade300,
-          width: location.active ? 2 : 1,
-        ),
+    return FilterChip(
+      label: Text(location.name),
+      avatar: CircleAvatar(
+        backgroundColor: Color(location.colorValue),
+        radius: 6,
       ),
-      child: InkWell(
-        onTap: () => _toggleLocationActive(ref, location),
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(color: Color(location.colorValue), shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                location.name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: location.active ? FontWeight.w600 : FontWeight.normal,
-                  color: location.active ? Color(location.colorValue) : Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: location.active ? Color(location.colorValue) : Colors.grey.shade500,
-                ),
-                onPressed: () => _removeLocation(ref, location),
-                tooltip: 'Remove',
-              ),
-            ],
-          ),
-        ),
+      onDeleted: () => _removeLocation(ref, location),
+      deleteIcon: Icon(Icons.close, size: 16),
+      backgroundColor: location.active ? Color(location.colorValue).withOpacity(0.1) : Colors.grey.shade100,
+      side: BorderSide(
+        color: location.active ? Color(location.colorValue) : Colors.grey.shade300,
+        width: location.active ? 2 : 1,
       ),
+      labelStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: location.active ? FontWeight.w600 : FontWeight.normal,
+        color: location.active ? Color(location.colorValue) : Colors.grey.shade700,
+      ),
+      selected: location.active,
+      onSelected: (selected) => _toggleLocationActive(ref, location),
     );
   }
 

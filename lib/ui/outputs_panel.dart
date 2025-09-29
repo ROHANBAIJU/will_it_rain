@@ -239,7 +239,10 @@ Widget _buildTabbedCharts(List<Series> series,
             child: ChartProbability(precipitationValues: precipitationPoints),
           ),
         ),
-        const ExportBar(),
+        SizedBox(
+          height: 48,
+          child: const ExportBar(),
+        ),
       ],
     );
   }

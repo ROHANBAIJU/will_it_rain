@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'ui/inputs_panel.dart';
 import 'ui/outputs_panel.dart';
+import 'ui/register_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: AppRoot()));
@@ -37,10 +38,11 @@ class AppRoot extends StatelessWidget {
           centerTitle: false,
         ),
       ),
-      initialRoute: '/',
+      initialRoute: '/register',
       routes: {
         '/': (_) => const SplashScreen(),
         '/login': (_) => const LoginScreen(),
+        '/register': (_) => const RegisterScreen(),
         '/dashboard': (_) => const WeatherDashboard(),
       },
     );
@@ -80,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 600),
-            pageBuilder: (_, __, ___) => const LoginScreen(),
+            pageBuilder: (_, __, ___) => const RegisterScreen(),
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(
                 opacity: animation,
@@ -414,18 +416,18 @@ class WeatherDashboard extends StatelessWidget {
 
           if (narrow) {
             // Mobile layout
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: const [
-                  InputsPanel(),
-                  SizedBox(height: 16),
-                  SizedBox(
-                    height: 500, // prevent unbounded height
-                    child: OutputsPanel(),
-                  ),
-                ],
+            return SizedBox(
+              height: constraints.maxHeight,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: const [
+                    Expanded(child: InputsPanel()),
+                    SizedBox(height: 16),
+                    Expanded(child: OutputsPanel()),
+                  ],
+                ),
               ),
             );
           }

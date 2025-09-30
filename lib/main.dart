@@ -38,7 +38,7 @@ class AppRoot extends StatelessWidget {
           centerTitle: false,
         ),
       ),
-      initialRoute: '/register',
+      initialRoute: '/',
       routes: {
         '/': (_) => const SplashScreen(),
         '/login': (_) => const LoginScreen(),
@@ -62,6 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scale;
   late Animation<double> _fade;
+  late Animation<Color?> _backgroundColor;
 
   @override
   void initState() {
@@ -69,11 +70,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1800),
     );
 
     _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _backgroundColor = ColorTween(
+      begin: const Color(0xFFEAF2FF),
+      end: const Color(0xFF2563EB),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.forward();
 
@@ -103,43 +108,48 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAF2FF),
-      body: Center(
-        child: ScaleTransition(
-          scale: _scale,
-          child: FadeTransition(
-            opacity: _fade,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
-                      BoxShadow(blurRadius: 12, color: Colors.black12)
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.water_drop_outlined,
-                      color: Colors.white, size: 52),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Will It Rain?',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: const Color(0xFF1F2937),
-                        fontWeight: FontWeight.w700,
+    return AnimatedBuilder(
+      animation: _backgroundColor,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: _backgroundColor.value,
+          body: Center(
+            child: ScaleTransition(
+              scale: _scale,
+              child: FadeTransition(
+                opacity: _fade,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(blurRadius: 12, color: Colors.black12)
+                        ],
                       ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.water_drop_outlined,
+                          color: Color(0xFF2563EB), size: 52),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Will It Rain?',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -152,17 +162,49 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _pwdCtrl.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -181,129 +223,135 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Logo
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2563EB),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.water_drop_outlined,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Welcome Back',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: const Color(0xFF1F2937),
-                                fontWeight: FontWeight.bold,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 6,
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Padding(
+                      padding: const EdgeInsets.all(28),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Sign in to continue',
-                          style: TextStyle(color: Color(0xFF6B7280)),
-                        ),
-                        const SizedBox(height: 28),
-
-                        // Email
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-                            ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return 'Enter email';
-                            final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v);
-                            return ok ? null : 'Enter a valid email';
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password
-                        TextFormField(
-                          controller: _pwdCtrl,
-                          obscureText: _obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                              onPressed: () => setState(() => _obscure = !_obscure),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-                            ),
-                          ),
-                          validator: (v) => (v == null || v.length < 6) ? 'Min 6 characters' : null,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Sign In button
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: _loading ? null : _onLogin,
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: const Color(0xFF2563EB),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.water_drop_outlined,
+                                color: Colors.white,
+                                size: 40,
                               ),
                             ),
-                            child: _loading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : const Text(
-                                    'Sign In',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Welcome Back',
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    color: const Color(0xFF1F2937),
+                                    fontWeight: FontWeight.bold,
                                   ),
-                          ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Sign in to continue',
+                              style: TextStyle(color: Color(0xFF6B7280)),
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Email
+                            TextFormField(
+                              controller: _emailCtrl,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: const Icon(Icons.email_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+                                ),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Enter email';
+                                final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v);
+                                return ok ? null : 'Enter a valid email';
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password
+                            TextFormField(
+                              controller: _pwdCtrl,
+                              obscureText: _obscure,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                                  onPressed: () => setState(() => _obscure = !_obscure),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+                                ),
+                              ),
+                              validator: (v) => (v == null || v.length < 6) ? 'Min 6 characters' : null,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign In button
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: _loading ? null : _onLogin,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Sign In',
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: _loading ? null : () {},
+                              child: const Text('Forgot password?'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: _loading ? null : () {},
-                          child: const Text('Forgot password?'),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

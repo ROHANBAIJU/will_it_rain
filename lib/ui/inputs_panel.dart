@@ -26,14 +26,46 @@ class InputsPanel extends ConsumerStatefulWidget {
   ConsumerState<InputsPanel> createState() => _InputsPanelState();
 }
 
-class _InputsPanelState extends ConsumerState<InputsPanel> {
+class _InputsPanelState extends ConsumerState<InputsPanel>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(-0.3, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _debounceTimer?.cancel();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -52,39 +84,45 @@ class _InputsPanelState extends ConsumerState<InputsPanel> {
       padding: const EdgeInsets.all(24),
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ExpansionTile(
-                initiallyExpanded: true,
-                title: const Text(
-                  'Forecasting Parameters',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2563EB),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ExpansionTile(
+                    initiallyExpanded: true,
+                    title: const Text(
+                      'Forecasting Parameters',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                    childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    children: [
+                      _buildLocationSearch(context, ref, searchQuery, isLoadingGeocoding),
+                      const SizedBox(height: 16),
+                      if (locations.isNotEmpty) ...[
+                        _buildLocationChips(context, ref, locations),
+                        const SizedBox(height: 24),
+                      ],
+                      _buildDateTimePicker(context, ref, range, selectedTime),
+                      const SizedBox(height: 24),
+                      _buildVariableSelector(context, ref, selectedVariables),
+                    ],
                   ),
                 ),
-                childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                children: [
-                  _buildLocationSearch(context, ref, searchQuery, isLoadingGeocoding),
-                  const SizedBox(height: 16),
-                  if (locations.isNotEmpty) ...[
-                    _buildLocationChips(context, ref, locations),
-                    const SizedBox(height: 24),
-                  ],
-                  _buildDateTimePicker(context, ref, range, selectedTime),
-                  const SizedBox(height: 24),
-                  _buildVariableSelector(context, ref, selectedVariables),
-                ],
-              ),
+                const SizedBox(height: 24),
+                _buildForecastButton(context, ref, isLoading),
+              ],
             ),
-            const SizedBox(height: 24),
-            _buildForecastButton(context, ref, isLoading),
-          ],
+          ),
         ),
       ),
     );

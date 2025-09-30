@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'widgets/chart_time_series.dart';
+import 'widgets/chart_time_series.dart' hide Series, TimePoint;
 import 'widgets/chart_probability.dart';
 import 'widgets/heatmap_placeholder.dart';
 import 'widgets/export_bar.dart';
 import '../core/state.dart';
-import '../core/models.dart';
+import '../core/models.dart' as core_models;
 
 class OutputsPanel extends ConsumerStatefulWidget {
   const OutputsPanel({super.key});
@@ -18,16 +18,45 @@ class OutputsPanel extends ConsumerStatefulWidget {
 class _OutputsPanelState extends ConsumerState<OutputsPanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 800),
+      );
+
+      _fadeAnimation = Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ));
+
+      _slideAnimation = Tween<Offset>(
+        begin: const Offset(0.3, 0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ));
+
+      _animationController.forward();
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -66,8 +95,8 @@ class _OutputsPanelState extends ConsumerState<OutputsPanel>
   }
 
   Widget _buildSummaryCard(
-    ForecastSummary summary,
-    List<LocationItem> locations,
+    core_models.ForecastSummary summary,
+    List<core_models.LocationItem> locations,
   ) {
     final locationName =
         locations.isNotEmpty ? locations.first.name : 'No location';
@@ -150,7 +179,7 @@ class _OutputsPanelState extends ConsumerState<OutputsPanel>
   }
 
   /// Tab card. `viewportHeight` lets us choose a safe height for the view area.
-Widget _buildTabbedCharts(List<Series> series,
+Widget _buildTabbedCharts(List<core_models.Series> series,
     {required double viewportHeight}) {
   // Make the chart area height responsive but bounded so it never overflows.
   final contentHeight = viewportHeight.isFinite
@@ -209,13 +238,13 @@ Widget _buildTabbedCharts(List<Series> series,
 
 
   // === Tabs: Expanded chart inside a bounded area + fixed ExportBar ===
-  Widget _timeSeriesTab(List<Series> series) {
+  Widget _timeSeriesTab(List<core_models.Series> series) {
     return Column(
       children: [
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: ChartTimeSeries(series: series),
+            child: ChartTimeSeries(series: series as dynamic),
           ),
         ),
         const ExportBar(),
@@ -223,13 +252,13 @@ Widget _buildTabbedCharts(List<Series> series,
     );
   }
 
-  Widget _probabilityTab(List<Series> series) {
+  Widget _probabilityTab(List<core_models.Series> series) {
     final precipitationSeries = series
-        .where((s) => s.label.toLowerCase().contains('precipitation'))
+        .where((s) => s?.label.toLowerCase().contains('precipitation') ?? false)
         .toList();
     final precipitationPoints = precipitationSeries.isNotEmpty
-        ? precipitationSeries.first.points
-        : <TimePoint>[];
+        ? precipitationSeries.first.points as List<core_models.TimePoint>
+        : <core_models.TimePoint>[];
 
     return Column(
       children: [
@@ -247,7 +276,7 @@ Widget _buildTabbedCharts(List<Series> series,
     );
   }
 
-  Widget _heatmapTab(List<Series> series) {
+  Widget _heatmapTab(List<core_models.Series> series) {
     return Column(
       children: [
         Expanded(

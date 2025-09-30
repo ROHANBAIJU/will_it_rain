@@ -11,3 +11,8 @@
   - Display series data with proper axes and legend
 - [x] Task 4: Implement ExportBar in ui/widgets/export_bar.dart
   - Create stateless widget with three export buttons (CSV, JSON, PNG)
+- [x] Task 5: Update outputs_panel.dart to use ChartTimeSeries directly
+  - Hide Series and TimePoint from chart_time_series.dart import
+  - Use core_models prefix for models.dart imports
+  - Update all method signatures to use core_models.Series
+  - Cast series to dynamic for ChartTimeSeries widget

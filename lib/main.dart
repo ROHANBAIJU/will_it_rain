@@ -333,17 +333,13 @@ class WeatherDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Text(
-              '🌦 Will It Rain?',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2563EB),
-                fontSize: 20,
-              ),
-            ),
-          ],
+        title: const Text(
+          '🌦 Will It Rain?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2563EB),
+            fontSize: 20,
+          ),
         ),
         actions: [
           IconButton(

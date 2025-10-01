@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+xarray
+netcdf4
+h5netcdf
+python-dotenv
+dask
+requests 
+pydap
+Jinja2

@@ -1,0 +1,70 @@
+# Created by GitHub Copilot
+# General
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.log
+*.tmp
+*.bak
+
+# Python backend
+BACKEND/__pycache__/
+BACKEND/*.pyc
+BACKEND/venv/
+BACKEND/.venv/
+BACKEND/env/
+BACKEND/.env
+BACKEND/data/
+BACKEND/BACKEND/
+
+# Flutter frontend
+FRONTEND/.dart_tool/
+FRONTEND/build/
+FRONTEND/.flutter-plugins
+FRONTEND/.flutter-plugin-dependencies
+FRONTEND/.pub-cache/
+FRONTEND/profile/
+FRONTEND/coverage/
+FRONTEND/test/coverage/
+
+# Android
+FRONTEND/android/.gradle/
+FRONTEND/android/local.properties
+FRONTEND/android/app/src/main/assets/flutter_assets/*
+FRONTEND/android_bak/
+
+# iOS
+FRONTEND/ios/Pods/
+FRONTEND/ios/Podfile.lock
+FRONTEND/ios/.symlinks/
+FRONTEND/ios/Flutter/App.framework
+FRONTEND/ios/Flutter/engine
+FRONTEND/ios/Flutter/flutter_assets/*
+FRONTEND/ios/Runner/GeneratedPluginRegistrant.h
+FRONTEND/ios/Runner/GeneratedPluginRegistrant.m
+FRONTEND/ios/Runner/GeneratedPluginRegistrant.swift
+
+# Linux
+FRONTEND/linux/flutter/ephemeral/
+
+# macOS
+FRONTEND/macos/Flutter/ephemeral/
+FRONTEND/macos/Pods/
+FRONTEND/macos/Podfile.lock
+FRONTEND/macos/.symlinks/
+
+# Windows
+FRONTEND/windows/flutter/ephemeral/
+FRONTEND/windows/runner/Debug/
+FRONTEND/windows/runner/Release/
+FRONTEND/windows/runner/Profile/
+
+# Virtual environment
+venv/
+/venv/
+
+
+venv

@@ -152,7 +152,8 @@ def save_prediction_to_cache(
     latest_year: int,
     missing_years: List[int],
     confidence_score: float,
-    ai_insight: Optional[Dict[str, Any]] = None
+    ai_insight: Optional[Dict[str, Any]] = None,
+    verification_result: Optional[Dict[str, Any]] = None
 ) -> bool:
     """
     Saves a prediction to Firestore cache.
@@ -168,6 +169,7 @@ def save_prediction_to_cache(
         missing_years (list): Years that haven't happened yet
         confidence_score (float): Confidence score (0-1)
         ai_insight (dict, optional): AI-generated insight from Gemini
+        verification_result (dict, optional): Two-stage verification result
     
     Returns:
         bool: True if saved successfully
@@ -203,6 +205,10 @@ def save_prediction_to_cache(
         # Add AI insight if available
         if ai_insight:
             cache_data["ai_insight"] = ai_insight
+        
+        # Add verification result if available
+        if verification_result:
+            cache_data["verification"] = verification_result
         
         # Save to Firestore
         doc_ref = db.collection('weather_predictions').document(cache_key)

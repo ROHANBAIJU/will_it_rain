@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from app.core import nasa_data_handler, statistical_engine
 from app.core.reasoning_agent import get_reasoning_agent
+from app.core.verification_agent import get_verification_agent
 from app.services import firestore_service
 from app.api.auth_routes import get_current_user
 from datetime import datetime
@@ -8,8 +9,9 @@ import re
 
 router = APIRouter()
 
-# Initialize AI reasoning agent
+# Initialize AI agents
 reasoning_agent = get_reasoning_agent()
+verification_agent_instance = get_verification_agent()
 
 @router.get("/", tags=["Health Check"])
 async def health_check():
@@ -76,6 +78,14 @@ async def predict_weather(
                     if "error" in statistics:
                         raise HTTPException(status_code=404, detail=statistics["error"])
                     
+                    # STAGE 1: Verify updated statistics
+                    print("🔍 Stage 1: Verifying updated statistical calculations...")
+                    verification_result = verification_agent_instance.verify_statistics(
+                        statistics=statistics,
+                        location={"lat": lat, "lon": lon},
+                        date=date
+                    )
+                    
                     # Calculate metadata
                     current_year = datetime.now().year
                     target_year = datetime.strptime(date, "%Y-%m-%d").year
@@ -112,7 +122,8 @@ async def predict_weather(
                         statistics['data_years_count']
                     )
                     
-                    # Generate AI reasoning
+                    # STAGE 2: Generate AI reasoning with verified data
+                    print("🤖 Stage 2: Generating insight with verified updated data...")
                     ai_insight = reasoning_agent.generate_insight(
                         lat, lon, date,
                         statistics,
@@ -125,8 +136,16 @@ async def predict_weather(
                         "statistics": statistics,
                         "confidence_score": round(confidence_score, 2),
                         "cache_status": "updated",
-                        "missing_data_alert": missing_data_alert
+                        "missing_data_alert": missing_data_alert,
+                        "verification": {
+                            "status": verification_result['status'],
+                            "confidence": verification_result['confidence'],
+                            "summary": verification_agent_instance.get_verification_summary(verification_result)
+                        }
                     }
+                    
+                    if verification_result.get('anomalies'):
+                        response["verification"]["anomalies"] = verification_result['anomalies']
                     
                     if ai_insight:
                         response["ai_insight"] = ai_insight
@@ -204,6 +223,21 @@ async def predict_weather(
         if "error" in statistics:
             raise HTTPException(status_code=404, detail=statistics["error"])
         
+        # ============================================================
+        # STAGE 1: AI VERIFICATION OF STATISTICS
+        # ============================================================
+        print("🔍 Stage 1: Verifying statistical calculations with AI...")
+        verification_result = verification_agent_instance.verify_statistics(
+            statistics=statistics,
+            location={"lat": lat, "lon": lon},
+            date=date
+        )
+        
+        # Check if verification flagged any issues
+        if not verification_result.get('is_valid', True):
+            print(f"⚠️ Verification flagged anomalies: {verification_result.get('anomalies', [])}")
+            # Log warning but proceed (you can change this to raise exception if desired)
+        
         # Calculate metadata for caching
         current_year = datetime.now().year
         target_year = datetime.strptime(date, "%Y-%m-%d").year
@@ -232,7 +266,10 @@ async def predict_weather(
             statistics['data_years_count']
         )
         
-        # Generate AI reasoning
+        # ============================================================
+        # STAGE 2: AI INSIGHT GENERATION (with verified data)
+        # ============================================================
+        print("🤖 Stage 2: Generating human-readable insight with verified data...")
         ai_insight = reasoning_agent.generate_insight(
             lat, lon, date,
             statistics,
@@ -240,7 +277,7 @@ async def predict_weather(
             missing_data_alert
         )
         
-        # Save to cache with AI insight
+        # Save to cache with AI insight and verification status
         firestore_service.save_prediction_to_cache(
             lat, lon, date,
             statistics,
@@ -249,7 +286,8 @@ async def predict_weather(
             latest_year,
             missing_years,
             confidence_score,
-            ai_insight=ai_insight
+            ai_insight=ai_insight,
+            verification_result=verification_result  # Save verification metadata
         )
         
         response = {
@@ -257,8 +295,18 @@ async def predict_weather(
             "statistics": statistics,
             "confidence_score": round(confidence_score, 2),
             "cache_status": "miss",
-            "missing_data_alert": missing_data_alert
+            "missing_data_alert": missing_data_alert,
+            "verification": {
+                "status": verification_result['status'],
+                "confidence": verification_result['confidence'],
+                "summary": verification_agent_instance.get_verification_summary(verification_result)
+            }
         }
+        
+        # Add detailed verification info if there are anomalies
+        if verification_result.get('anomalies'):
+            response["verification"]["anomalies"] = verification_result['anomalies']
+            response["verification"]["notes"] = verification_result.get('validation_notes', '')
         
         if ai_insight:
             response["ai_insight"] = ai_insight

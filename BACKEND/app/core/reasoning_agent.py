@@ -93,7 +93,7 @@ Provide a natural, conversational weather insight in 3-4 sentences that includes
 1. Rain likelihood in simple terms (e.g., "unlikely to rain", "high chance of showers")
 2. Temperature description (e.g., "pleasant weather", "hot day", "cool evening")
 3. Practical recommendation for the day (clothing, activities, precautions)
-4. Also mention the location of the coordinates in a friendly way.
+4. Also mention the name of the place of the location of the coordinates in a friendly way, if you cant get the name of the location just say your area or something but dont use the coordinates in your response.
 Keep it friendly, concise, and actionable. Speak directly to the user (use "you" and "your").
 """
         

@@ -66,5 +66,32 @@ FRONTEND/windows/runner/Profile/
 venv/
 /venv/
 
+# Firebase credentials
+firebase-credentials.json
+*-firebase-adminsdk-*.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
 
 venv
+
+
+# Firebase credentials
+firebase-credentials.json
+*-firebase-adminsdk-*.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+
+venv
+
+
+# Firebase credentials
+firebase-credentials.json
+*-firebase-adminsdk-*.json

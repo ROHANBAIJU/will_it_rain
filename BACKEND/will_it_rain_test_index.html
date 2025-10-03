@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will It Rain - Test Interface</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .auth-container {
+            display: block;
+        }
+        
+        .app-container {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-google {
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-google:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .toggle-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .toggle-text a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .user-info {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .user-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .user-info p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .prediction-form {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .prediction-form h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .result-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-card h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .ai-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .ai-insight h4 {
+            margin-bottom: 10px;
+        }
+        
+        .ai-insight p {
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌦️ Will It Rain?</h1>
+            <p>Weather Prediction Test Interface</p>
+        </div>
+        
+        <div class="content">
+            <!-- Authentication Container -->
+            <div id="authContainer" class="auth-container">
+                <div id="alertBox"></div>
+                
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <h2 style="margin-bottom: 25px; color: #333;">Welcome Back</h2>
+                    
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="loginWithEmail()">Sign In</button>
+                    
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <button class="btn btn-google" onclick="loginWithGoogle()">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+                    
+                    <div class="toggle-text">
+                        Don't have an account? <a href="#" onclick="toggleForms(); return false;">Sign Up</a>
+                    </div>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="registerForm" class="hidden">
+                    <h2 style="margin-bottom: 25px; color: #333;">Create Account</h2>
+                    
+                    <div class="form-group">
+                        <label for="registerName">Full Name</label>
+                        <input type="text" id="registerName" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" placeholder="your@email.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" placeholder="At least 6 characters" required>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="registerWithEmail()">Create Account</button>
+                    
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <button class="btn btn-google" onclick="loginWithGoogle()">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign Up with Google
+                    </button>
+                    
+                    <div class="toggle-text">
+                        Already have an account? <a href="#" onclick="toggleForms(); return false;">Sign In</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- App Container (After Login) -->
+            <div id="appContainer" class="app-container">
+                <div class="user-info">
+                    <h3>👤 Logged In As</h3>
+                    <p><strong>Name:</strong> <span id="userName">-</span></p>
+                    <p><strong>Email:</strong> <span id="userEmail">-</span></p>
+                    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 15px;">Sign Out</button>
+                </div>
+                
+                <div class="prediction-form">
+                    <h3>🌦️ Get Weather Prediction</h3>
+                    
+                    <div class="form-group">
+                        <label for="latitude">Latitude</label>
+                        <input type="number" id="latitude" value="13.00" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" id="longitude" value="77.61" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="getPrediction()">Get Prediction</button>
+                </div>
+                
+                <div id="loadingBox" class="hidden">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Fetching weather prediction...</p>
+                    </div>
+                </div>
+                
+                <div id="resultBox"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration (Updated with real credentials)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMK3r6YADGhQBVY_hEOUhKZyHV8-ajfng",
+            authDomain: "will-it-rain-f9f00.firebaseapp.com",
+            projectId: "will-it-rain-f9f00",
+            storageBucket: "will-it-rain-f9f00.firebasestorage.app",
+            messagingSenderId: "606020632465",
+            appId: "1:606020632465:web:e5409c4adc792d395de430",
+            measurementId: "G-K1FVKTNZL4"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+        let accessToken = null;
+        let currentUser = null;
+
+        // Set default date to tomorrow
+        document.addEventListener('DOMContentLoaded', () => {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('date').valueAsDate = tomorrow;
+        });
+
+        // Toggle between login and register forms
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+            
+            clearAlert();
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Clear alert
+        function clearAlert() {
+            document.getElementById('alertBox').innerHTML = '';
+        }
+
+        // Register with Email/Password
+        async function registerWithEmail() {
+            const name = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+
+            if (!name || !email || !password) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, name })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    currentUser = data.user;
+                    showAlert('Account created successfully!', 'success');
+                    setTimeout(() => showApp(), 1500);
+                } else {
+                    showAlert(data.detail || 'Registration failed');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.');
+                console.error(error);
+            }
+        }
+
+        // Login with Email/Password
+        async function loginWithEmail() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    currentUser = data.user;
+                    showAlert('Login successful!', 'success');
+                    setTimeout(() => showApp(), 1500);
+                } else {
+                    showAlert(data.detail || 'Login failed');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.');
+                console.error(error);
+            }
+        }
+
+        // Login with Google
+        async function loginWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                
+                // Get ID token
+                const idToken = await result.user.getIdToken();
+
+                // Send to backend
+                const response = await fetch(`${API_BASE_URL}/auth/login/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ google_id_token: idToken })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    currentUser = data.user;
+                    showAlert('Google login successful!', 'success');
+                    setTimeout(() => showApp(), 1500);
+                } else {
+                    showAlert(data.detail || 'Google login failed');
+                }
+            } catch (error) {
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showAlert('Sign-in cancelled');
+                } else {
+                    showAlert('Google sign-in error: ' + error.message);
+                }
+                console.error(error);
+            }
+        }
+
+        // Show app after login
+        function showApp() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        // Logout
+        function logout() {
+            accessToken = null;
+            currentUser = null;
+            auth.signOut();
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('resultBox').innerHTML = '';
+            clearAlert();
+        }
+
+        // Get Weather Prediction
+        async function getPrediction() {
+            const lat = document.getElementById('latitude').value;
+            const lon = document.getElementById('longitude').value;
+            const date = document.getElementById('date').value;
+
+            if (!lat || !lon || !date) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            document.getElementById('loadingBox').classList.remove('hidden');
+            document.getElementById('resultBox').innerHTML = '';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/predict?lat=${lat}&lon=${lon}&date=${date}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+                document.getElementById('loadingBox').classList.add('hidden');
+
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    alert(data.detail || 'Prediction failed');
+                }
+            } catch (error) {
+                document.getElementById('loadingBox').classList.add('hidden');
+                alert('Network error. Please try again.');
+                console.error(error);
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            const stats = data.statistics;
+            const aiInsight = data.ai_insight;
+            const confidence = data.confidence_score;
+
+            let html = `
+                <div class="result-card">
+                    <h4>📊 Weather Statistics</h4>
+                    <div class="stat">
+                        <span class="stat-label">Rain Probability</span>
+                        <span class="stat-value">${stats.precipitation_probability_percent.toFixed(1)}%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Avg Temperature</span>
+                        <span class="stat-value">${stats.average_temperature_celsius.toFixed(1)}°C</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Temperature Range</span>
+                        <span class="stat-value">${stats.min_temperature_celsius.toFixed(1)}°C - ${stats.max_temperature_celsius.toFixed(1)}°C</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Wind Speed</span>
+                        <span class="stat-value">${stats.average_wind_speed_mps.toFixed(1)} m/s</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Humidity</span>
+                        <span class="stat-value">${stats.average_humidity_percent.toFixed(1)}%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Confidence Score</span>
+                        <span class="stat-value">${(confidence * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Data Years</span>
+                        <span class="stat-value">${stats.data_years_count} years (${stats.years_analyzed})</span>
+                    </div>
+                </div>
+            `;
+
+            if (aiInsight) {
+                html += `
+                    <div class="ai-insight">
+                        <h4>🤖 AI Insight</h4>
+                        <p>${aiInsight.reasoning}</p>
+                        <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                            Generated by ${aiInsight.generated_by}
+                        </p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('resultBox').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

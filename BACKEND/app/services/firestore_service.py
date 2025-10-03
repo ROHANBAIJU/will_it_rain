@@ -41,20 +41,37 @@ def initialize_firebase():
             # No credentials configured - silent mode
             return None
         
-        if cred_path and os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
+        # Try multiple possible locations (for local dev + Render + Cloud Run)
+        possible_paths = [
+            cred_path,  # From environment variable
+            '/etc/secrets/firebase-credentials.json',  # Render secret files
+            '/app/firebase-credentials.json',  # Docker volume mount
+            'firebase-credentials.json',  # Local development
+        ]
+        
+        credentials_file = None
+        for path in possible_paths:
+            if path and os.path.exists(path):
+                credentials_file = path
+                break
+        
+        if credentials_file:
+            cred = credentials.Certificate(credentials_file)
             firebase_admin.initialize_app(cred)
             _db = firestore.client()
             _firebase_initialized = True
-            print("✅ Firebase initialized successfully with credentials file")
+            print(f"✅ Firebase initialized successfully with credentials from: {credentials_file}")
             return _db
         else:
-            # Credentials path set but file doesn't exist
-            print(f"⚠️ Firebase credentials file not found at: {cred_path}")
+            # Credentials path set but file doesn't exist in any location
+            print(f"⚠️ Firebase credentials file not found. Tried:")
+            for path in possible_paths:
+                if path:
+                    print(f"   - {path}")
             print(f"   To enable caching:")
             print(f"   1. Create Firebase project at https://console.firebase.google.com/")
             print(f"   2. Download service account JSON")
-            print(f"   3. Save as: {cred_path}")
+            print(f"   3. Save as one of the paths above")
             print(f"   Running without caching (direct API mode)")
             return None
         

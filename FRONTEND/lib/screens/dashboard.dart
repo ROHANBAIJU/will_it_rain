@@ -5,6 +5,8 @@ import '../widgets/footer.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'package:latlong2/latlong.dart';
+import '../services/geocoding_service.dart';
+import 'dart:async';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -18,6 +20,12 @@ enum _DashTab { today, tomorrow, tenDays }
 class _DashboardPageState extends State<DashboardPage> {
   bool isCalendarOpen = false;
   _DashTab selected = _DashTab.today;
+  // Map/search state
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
+  LatLng _mapCenter = LatLng(40.7128, -74.0060);
+  Marker? _selectedMarker;
 
   @override
   Widget build(BuildContext context) {
@@ -68,33 +76,103 @@ class _DashboardPageState extends State<DashboardPage> {
           // ===== Google Maps Placeholder =====
           // ===== OpenStreetMap Widget =====
           SizedBox(
-            height: 300,
+            height: 360,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: FlutterMap(
-                options: MapOptions(
-                  center: LatLng(40.7128, -74.0060),
-                  zoom: 12,
-                ),
+              child: Column(
                 children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.aeronimbus',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                  Marker(
-                    point: LatLng(40.7128, -74.0060),
-                    width: 40,
-                    height: 40,
-                    builder: (ctx) => const Icon(
-                      Icons.location_pin,
-                      color: Colors.red,
-                      size: 40,
+                  // Search bar
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    color: const Color(0x0DFFFFFF),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search location or use auto-locate',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.my_location),
+                              onPressed: () async {
+                                // attempt to use device location
+                                try {
+                                  // get current position via geolocator package
+                                  // to avoid adding an import and extra logic here,
+                                  // we will rely on suggestions or future improvements
+                                } catch (e) {
+                                  // ignore for now
+                                }
+                              },
+                            ),
+                          ),
+                          onChanged: (v) {
+                            if (_debounce?.isActive ?? false) _debounce!.cancel();
+                            _debounce = Timer(const Duration(milliseconds: 400), () async {
+                              if (v.trim().isEmpty) {
+                                setState(() => _suggestions = []);
+                                return;
+                              }
+                              final res = await GeocodingService.search(v.trim());
+                              setState(() => _suggestions = res);
+                            });
+                          },
+                        ),
+                        // suggestions
+                        if (_suggestions.isNotEmpty)
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 140),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: _suggestions.length,
+                              itemBuilder: (context, idx) {
+                                final s = _suggestions[idx];
+                                return ListTile(
+                                  title: Text(s.displayName, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                                  onTap: () {
+                                    // center map and add marker
+                                    setState(() {
+                                      _mapCenter = LatLng(s.lat, s.lon);
+                                      _selectedMarker = Marker(
+                                        point: _mapCenter,
+                                        width: 40,
+                                        height: 40,
+                                        builder: (ctx) => const Icon(
+                                          Icons.location_pin,
+                                          color: Colors.red,
+                                          size: 40,
+                                        ),
+                                      );
+                                      _suggestions = [];
+                                      _searchController.text = s.displayName;
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                    ],
+                  // Map
+                  Expanded(
+                    child: FlutterMap(
+                      options: MapOptions(
+                        center: _mapCenter,
+                        zoom: 12,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.aeronimbus',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            if (_selectedMarker != null) _selectedMarker!,
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

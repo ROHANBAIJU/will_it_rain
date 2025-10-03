@@ -1,0 +1,32 @@
+<<<<<<<
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+  
+  # Google Fonts for better typography
+  google_fonts: ^6.1.0
+
+  # Persist simple key-values like user_location
+  shared_preferences: ^2.2.2
+=======
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+  
+  # Google Fonts for better typography
+  google_fonts: ^6.1.0
+
+  # Persist simple key-values like user_location
+  shared_preferences: ^2.2.2
+
+  # Map packages
+  flutter_map: ^4.0.0
+  latlong2: ^0.8.1

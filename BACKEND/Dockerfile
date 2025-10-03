@@ -19,10 +19,14 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy the application code
 COPY ./app /app/app
+COPY ./render_start.sh /app/render_start.sh
+
+# Make startup script executable
+RUN chmod +x /app/render_start.sh
 
 # Expose port (Render will use this)
 EXPOSE 8000
 
 # Command to run the application
-# Render will override this with PORT environment variable if needed
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Uses PORT environment variable from Render (defaults to 8000)
+CMD ["/bin/bash", "/app/render_start.sh"]

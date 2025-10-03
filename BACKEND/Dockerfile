@@ -20,5 +20,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy the application code
 COPY ./app /app/app
 
+# Expose port (Render will use this)
+EXPOSE 8000
+
 # Command to run the application
+# Render will override this with PORT environment variable if needed
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

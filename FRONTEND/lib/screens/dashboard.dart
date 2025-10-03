@@ -7,6 +7,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/geocoding_service.dart';
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -26,6 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<PlaceSuggestion> _suggestions = [];
   LatLng _mapCenter = LatLng(40.7128, -74.0060);
   Marker? _selectedMarker;
+  final MapController _mapController = MapController();
 
   @override
   Widget build(BuildContext context) {
@@ -94,18 +96,101 @@ class _DashboardPageState extends State<DashboardPage> {
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.my_location),
-                              onPressed: () async {
-                                // attempt to use device location
-                                try {
-                                  // get current position via geolocator package
-                                  // to avoid adding an import and extra logic here,
-                                  // we will rely on suggestions or future improvements
-                                } catch (e) {
-                                  // ignore for now
-                                }
-                              },
+                                onPressed: () async {
+                                  bool serviceEnabled;
+                                  LocationPermission permission;
+
+                                  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                                  if (!serviceEnabled) {
+                                    // Location services are not enabled
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Location services are disabled.')),
+                                    );
+                                    return;
+                                  }
+
+                                  permission = await Geolocator.checkPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    permission = await Geolocator.requestPermission();
+                                    if (permission == LocationPermission.denied) {
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Location permissions are denied.')),
+                                      );
+                                      return;
+                                    }
+                                  }
+
+                                  if (permission == LocationPermission.deniedForever) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Location permissions are permanently denied.')),
+                                    );
+                                    return;
+                                  }
+
+                                  final pos = await Geolocator.getCurrentPosition();
+                                  // Immediately update the map using device coords so marker appears
+                                  final latlon = LatLng(pos.latitude, pos.longitude);
+                                  if (!mounted) return;
+                                  setState(() {
+                                    _mapCenter = latlon;
+                                    _selectedMarker = Marker(
+                                      point: _mapCenter,
+                                      width: 40,
+                                      height: 40,
+                                      builder: (ctx) => const Icon(
+                                        Icons.location_pin,
+                                        color: Colors.red,
+                                        size: 40,
+                                      ),
+                                    );
+                                  });
+                                  try {
+                                    _mapController.move(_mapCenter, 12.0);
+                                  } catch (_) {}
+
+                                  // Then try reverse geocoding to show a friendly place name (may fail on web due to CORS)
+                                  try {
+                                    final place = await GeocodingService.reverse(pos.latitude, pos.longitude);
+                                    if (place != null) {
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _searchController.text = place.displayName;
+                                      });
+                                    }
+                                  } catch (_) {
+                                    // ignore reverse geocode errors (CORS or network)
+                                  }
+                                },
                             ),
                           ),
+                            onSubmitted: (v) async {
+                              if (v.trim().isEmpty) return;
+                              final res = await GeocodingService.search(v.trim(), limit: 1);
+                              if (res.isNotEmpty) {
+                                final s = res.first;
+                                setState(() {
+                                  _mapCenter = LatLng(s.lat, s.lon);
+                                  _selectedMarker = Marker(
+                                    point: _mapCenter,
+                                    width: 40,
+                                    height: 40,
+                                    builder: (ctx) => const Icon(
+                                      Icons.location_pin,
+                                      color: Colors.red,
+                                      size: 40,
+                                    ),
+                                  );
+                                  _suggestions = [];
+                                  _searchController.text = s.displayName;
+                                });
+                                try {
+                                  _mapController.move(_mapCenter, 12.0);
+                                } catch (_) {}
+                              }
+                            },
                           onChanged: (v) {
                             if (_debounce?.isActive ?? false) _debounce!.cancel();
                             _debounce = Timer(const Duration(milliseconds: 400), () async {
@@ -146,6 +231,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                       _suggestions = [];
                                       _searchController.text = s.displayName;
                                     });
+                                    try {
+                                      _mapController.move(_mapCenter, 12.0);
+                                    } catch (_) {}
                                   },
                                 );
                               },
@@ -157,6 +245,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   // Map
                   Expanded(
                     child: FlutterMap(
+                      mapController: _mapController,
                       options: MapOptions(
                         center: _mapCenter,
                         zoom: 12,
@@ -170,6 +259,19 @@ class _DashboardPageState extends State<DashboardPage> {
                           markers: [
                             if (_selectedMarker != null) _selectedMarker!,
                           ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Coordinates readout
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Lat: ${_mapCenter.latitude.toStringAsFixed(5)}, Lon: ${_mapCenter.longitude.toStringAsFixed(5)}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
@@ -327,6 +429,13 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   // --- small helpers ---

@@ -40,6 +40,10 @@ dependencies:
 
   # Persist simple key-values like user_location
   shared_preferences: ^2.2.2
+  # HTTP client for backend API calls (compatible with flutter_map)
+  http: ^0.13.6
+  # Secure storage for tokens
+  flutter_secure_storage: ^9.0.0
 
   # Map packages
   flutter_map: ^4.0.0

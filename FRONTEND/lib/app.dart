@@ -27,7 +27,7 @@ import 'screens/transparency.dart';
 import 'theme/aeronimbus_theme.dart';
 import 'state/app_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'screens/plan_ahead.dart';
 /// Public entry used by main.dart -> runApp(const AeroNimbusApp());
 class AeroNimbusApp extends StatelessWidget {
   const AeroNimbusApp({super.key});
@@ -105,8 +105,9 @@ class _MainTabsState extends State<MainTabs> {
   @override
   void initState() {
     super.initState();
-    _pages = const [
+    _pages =  [
       DashboardPage(),
+      PlanAheadWidget(),
       AlertsPage(),
       ComparePage(),
       BestDaysPage(),
@@ -119,6 +120,7 @@ class _MainTabsState extends State<MainTabs> {
     
     _drawerItems = const [
       _DrawerItem(icon: Icons.dashboard_outlined, label: 'Dashboard'),
+      _DrawerItem(icon: Icons.settings_outlined, label: 'Plan Ahead'),
       _DrawerItem(icon: Icons.health_and_safety_outlined, label: 'Health Alerts'),
       _DrawerItem(icon: Icons.bar_chart, label: 'Compare'),
       _DrawerItem(icon: Icons.star_border, label: 'Best Days'),

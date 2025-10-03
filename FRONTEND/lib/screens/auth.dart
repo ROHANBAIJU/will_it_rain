@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import '../services/api_client.dart';
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key, this.onAuthenticated});
@@ -16,28 +19,37 @@ class _AuthPageState extends State<AuthPage> {
   String authMethod = 'email'; // 'email' | 'phone'
 
   final _email = TextEditingController();
+  final _name = TextEditingController();
   final _phone = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
+  bool _loading = false;
+  final _secureStorage = const FlutterSecureStorage();
 
   final _formKey = GlobalKey<FormState>();
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Mock auth success
-    if (widget.onAuthenticated != null) {
-      widget.onAuthenticated!();
-    } else {
+    // Only email auth implemented for now
+    if (authMethod != 'email') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isLogin ? 'Signed in' : 'Account created')),
+        const SnackBar(content: Text('Phone auth is not implemented yet')),
       );
+      return;
+    }
+
+    if (isLogin) {
+      _login();
+    } else {
+      _register();
     }
   }
 
   @override
   void dispose() {
     _email.dispose();
+    _name.dispose();
     _phone.dispose();
     _password.dispose();
     _confirm.dispose();
@@ -243,6 +255,13 @@ class _AuthPageState extends State<AuthPage> {
                                       key: _formKey,
                                       child: Column(
                                         children: [
+                                          if (!isLogin) _modernField(
+                                            label: 'Full Name',
+                                            hint: 'Jane Doe',
+                                            controller: _name,
+                                            icon: Icons.person,
+                                            validator: (v) => (v ?? '').isEmpty ? 'Please enter your name' : null,
+                                          ),
                                           // Email/Phone Field
                                           if (authMethod == 'email')
                                             _modernField(
@@ -318,7 +337,7 @@ class _AuthPageState extends State<AuthPage> {
                                               ],
                                             ),
                                             child: ElevatedButton.icon(
-                                              onPressed: _submit,
+                                              onPressed: _loading ? null : _submit,
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.transparent,
                                                 shadowColor: Colors.transparent,
@@ -337,6 +356,11 @@ class _AuthPageState extends State<AuthPage> {
                                               ),
                                             ),
                                           ),
+
+                                          if (_loading) ...[
+                                            const SizedBox(height: 12),
+                                            const Center(child: CircularProgressIndicator()),
+                                          ],
 
                                           const SizedBox(height: 16),
                                           
@@ -373,6 +397,12 @@ class _AuthPageState extends State<AuthPage> {
                             color: Colors.white.withOpacity(0.6),
                             fontSize: 12,
                           ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Small debug control to clear stored token
+                        TextButton(
+                          onPressed: _clearToken,
+                          child: const Text('Logout / Clear stored token', style: TextStyle(color: Colors.white70)),
                         ),
                       ],
                     ),
@@ -497,6 +527,127 @@ class _AuthPageState extends State<AuthPage> {
         ),
       ],
     );
+  }
+  // Backend configuration (change for device or production)
+  String get _backendBase => 'https://will-it-rain-3ogz.onrender.com';
+
+  Future<void> _register() async {
+    setState(() => _loading = true);
+    try {
+      final body = jsonEncode({
+        'email': _email.text.trim(),
+        'password': _password.text,
+        'name': _name.text.trim(),
+      });
+
+    // Debug: print outgoing request (visible in console for web)
+    // ignore: avoid_print
+    print('POST $_backendBase/auth/register -> $body');
+
+    final res = await ApiClient.instance.post('/auth/register', body: {'email': _email.text.trim(), 'password': _password.text, 'name': _name.text.trim()});
+
+      // Debug: print response status and body
+      // ignore: avoid_print
+      print('RESPONSE ${res.statusCode}: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final token = data['access_token'] as String?;
+        if (token != null) {
+          await _saveToken(token);
+          widget.onAuthenticated?.call();
+          return;
+        }
+      }
+
+      // Try to parse a helpful error message from the backend JSON
+      String message = 'Registration failed';
+      try {
+        final json = jsonDecode(res.body);
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('detail')) message = json['detail'].toString();
+          else if (json.containsKey('error')) message = json['error'].toString();
+          else if (json.containsKey('message')) message = json['message'].toString();
+          else message = json.toString();
+        } else {
+          message = json.toString();
+        }
+      } catch (_) {
+        if (res.body.isNotEmpty) message = res.body;
+      }
+
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      // Surface unexpected errors
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _login() async {
+    setState(() => _loading = true);
+    try {
+      final body = jsonEncode({'email': _email.text.trim(), 'password': _password.text});
+
+    // Debug
+    // ignore: avoid_print
+    print('POST $_backendBase/auth/login -> $body');
+
+    final res = await ApiClient.instance.post('/auth/login', body: {'email': _email.text.trim(), 'password': _password.text});
+
+      // Debug: print response
+      // ignore: avoid_print
+      print('RESPONSE ${res.statusCode}: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final token = data['access_token'] as String?;
+        if (token != null) {
+          await _saveToken(token);
+          widget.onAuthenticated?.call();
+          return;
+        }
+      }
+
+      String message = 'Login failed';
+      try {
+        final json = jsonDecode(res.body);
+        if (json is Map<String, dynamic>) {
+          if (json.containsKey('detail')) message = json['detail'].toString();
+          else if (json.containsKey('error')) message = json['error'].toString();
+          else if (json.containsKey('message')) message = json['message'].toString();
+          else message = json.toString();
+        } else {
+          message = json.toString();
+        }
+      } catch (_) {
+        if (res.body.isNotEmpty) message = res.body;
+      }
+
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _saveToken(String token) async {
+    try {
+      await _secureStorage.write(key: 'access_token', value: token);
+    } catch (e) {
+      // ignore - best-effort
+    }
+  }
+
+  Future<void> _clearToken() async {
+    try {
+      await _secureStorage.delete(key: 'access_token');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Token cleared')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error clearing token: $e')));
+    }
   }
 
 }

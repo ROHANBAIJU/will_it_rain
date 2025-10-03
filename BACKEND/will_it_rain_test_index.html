@@ -299,6 +299,121 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Backend Selector Styles */
+        .backend-selector {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+        
+        .backend-selector h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .backend-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .backend-option {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .backend-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .backend-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .backend-option .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .backend-option .title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .backend-option .description {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .backend-status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .backend-status.checking {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .backend-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .backend-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .backend-status .status-icon {
+            font-size: 20px;
+        }
+        
+        .btn-check {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-check:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-check:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -310,8 +425,33 @@
         </div>
         
         <div class="content">
+            <!-- Backend Selector -->
+            <div id="backendSelector" class="backend-selector">
+                <h3>🚀 Choose Your Backend</h3>
+                
+                <div class="backend-options">
+                    <div class="backend-option" id="productionOption" onclick="selectBackend('production')">
+                        <div class="icon">🌍</div>
+                        <div class="title">Production</div>
+                        <div class="description">Render Cloud</div>
+                    </div>
+                    
+                    <div class="backend-option" id="localOption" onclick="selectBackend('local')">
+                        <div class="icon">💻</div>
+                        <div class="title">Local</div>
+                        <div class="description">localhost:8000</div>
+                    </div>
+                </div>
+                
+                <div id="backendStatus"></div>
+                
+                <button class="btn btn-primary" onclick="checkAndConnect()" id="connectBtn">
+                    Check & Connect
+                </button>
+            </div>
+            
             <!-- Authentication Container -->
-            <div id="authContainer" class="auth-container">
+            <div id="authContainer" class="auth-container hidden">
                 <div id="alertBox"></div>
                 
                 <!-- Login Form -->
@@ -397,6 +537,7 @@
                     <p><strong>Name:</strong> <span id="userName">-</span></p>
                     <p><strong>Email:</strong> <span id="userEmail">-</span></p>
                     <button class="btn btn-secondary" onclick="logout()" style="margin-top: 15px;">Sign Out</button>
+                    <button class="btn btn-secondary" onclick="changeBackend()" style="margin-top: 10px;">🔄 Change Backend</button>
                 </div>
                 
                 <div class="prediction-form">
@@ -449,34 +590,153 @@
         const auth = firebase.auth();
 
         // API Configuration
-        // Toggle between local and production by changing this variable
-        const USE_PRODUCTION = false;  // Set to true for production, false for local testing
+        const BACKENDS = {
+            production: 'https://will-it-rain-3ogz.onrender.com',
+            local: 'http://localhost:8000'
+        };
         
-        const API_BASE_URL = USE_PRODUCTION 
-            ? 'https://will-it-rain-3ogz.onrender.com'  // Production (Render)
-            : 'http://localhost:8000';  // Local development
-        
-        console.log(`🌐 Using API: ${API_BASE_URL}`);
-        
+        let selectedBackend = null;
+        let API_BASE_URL = null;
         let accessToken = null;
         let currentUser = null;
 
-        // Set default date to tomorrow and show environment badge
+        // Set default date to tomorrow
         document.addEventListener('DOMContentLoaded', () => {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('date').valueAsDate = tomorrow;
-            
-            // Show environment badge
-            const badge = document.getElementById('environmentBadge');
-            if (USE_PRODUCTION) {
-                badge.innerHTML = '🌍 <strong>PRODUCTION MODE</strong> - Using Render Backend';
-                badge.style.color = '#4ade80';
-            } else {
-                badge.innerHTML = '💻 <strong>LOCAL MODE</strong> - Using localhost:8000';
-                badge.style.color = '#fbbf24';
-            }
         });
+
+        // Backend Selection Functions
+        function selectBackend(backend) {
+            selectedBackend = backend;
+            
+            // Update UI
+            document.getElementById('productionOption').classList.remove('selected');
+            document.getElementById('localOption').classList.remove('selected');
+            
+            if (backend === 'production') {
+                document.getElementById('productionOption').classList.add('selected');
+            } else {
+                document.getElementById('localOption').classList.add('selected');
+            }
+            
+            // Clear previous status
+            document.getElementById('backendStatus').innerHTML = '';
+        }
+
+        // Check Backend Health
+        async function checkBackendHealth(url) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                const response = await fetch(url + '/', {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return { success: true, message: data.message || 'Backend is running!' };
+                } else {
+                    return { success: false, message: `Backend returned status ${response.status}` };
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return { success: false, message: 'Connection timeout (backend may be cold starting on Render)' };
+                }
+                return { success: false, message: `Connection failed: ${error.message}` };
+            }
+        }
+
+        // Show Status Message
+        function showBackendStatus(type, message) {
+            const statusDiv = document.getElementById('backendStatus');
+            const icons = {
+                checking: '⏳',
+                success: '✅',
+                error: '❌'
+            };
+            
+            statusDiv.innerHTML = `
+                <div class="backend-status ${type}">
+                    <span class="status-icon">${icons[type]}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+        }
+
+        // Check and Connect to Selected Backend
+        async function checkAndConnect() {
+            if (!selectedBackend) {
+                showBackendStatus('error', 'Please select a backend first!');
+                return;
+            }
+            
+            const connectBtn = document.getElementById('connectBtn');
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Checking...';
+            
+            const backendUrl = BACKENDS[selectedBackend];
+            showBackendStatus('checking', `Checking ${selectedBackend} backend at ${backendUrl}...`);
+            
+            const result = await checkBackendHealth(backendUrl);
+            
+            if (result.success) {
+                showBackendStatus('success', `✅ Connected to ${selectedBackend} backend! ${result.message}`);
+                
+                // Set the API URL
+                API_BASE_URL = backendUrl;
+                
+                // Update environment badge
+                const badge = document.getElementById('environmentBadge');
+                if (selectedBackend === 'production') {
+                    badge.innerHTML = '🌍 <strong>PRODUCTION MODE</strong> - Using Render Backend';
+                    badge.style.color = '#4ade80';
+                } else {
+                    badge.innerHTML = '💻 <strong>LOCAL MODE</strong> - Using localhost:8000';
+                    badge.style.color = '#fbbf24';
+                }
+                
+                console.log(`🌐 Connected to API: ${API_BASE_URL}`);
+                
+                // Show auth container after 1 second
+                setTimeout(() => {
+                    document.getElementById('backendSelector').style.display = 'none';
+                    document.getElementById('authContainer').classList.remove('hidden');
+                }, 1000);
+            } else {
+                showBackendStatus('error', 
+                    `❌ ${selectedBackend.toUpperCase()} backend is not available!\n\n` +
+                    `Error: ${result.message}\n\n` +
+                    `Options:\n` +
+                    `• Wait a moment and click "Check & Connect" again (Render free tier may be cold starting)\n` +
+                    `• Select the other backend option\n` +
+                    `• If using Local, make sure Docker is running`
+                );
+                
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Check & Connect';
+            }
+        }
+
+        // Add "Change Backend" button functionality
+        function changeBackend() {
+            document.getElementById('backendSelector').style.display = 'block';
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('backendStatus').innerHTML = '';
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('connectBtn').textContent = 'Check & Connect';
+            
+            // Clear auth state
+            accessToken = null;
+            currentUser = null;
+            clearAlert();
+        }
 
         // Toggle between login and register forms
         function toggleForms() {

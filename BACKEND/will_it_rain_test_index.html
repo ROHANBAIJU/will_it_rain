@@ -306,6 +306,7 @@
         <div class="header">
             <h1>🌦️ Will It Rain?</h1>
             <p>Weather Prediction Test Interface</p>
+            <p id="environmentBadge" style="margin-top: 10px; font-size: 12px; opacity: 0.9;"></p>
         </div>
         
         <div class="content">
@@ -448,15 +449,33 @@
         const auth = firebase.auth();
 
         // API Configuration
-        const API_BASE_URL = 'http://localhost:8000';
+        // Toggle between local and production by changing this variable
+        const USE_PRODUCTION = false;  // Set to true for production, false for local testing
+        
+        const API_BASE_URL = USE_PRODUCTION 
+            ? 'https://will-it-rain-3ogz.onrender.com'  // Production (Render)
+            : 'http://localhost:8000';  // Local development
+        
+        console.log(`🌐 Using API: ${API_BASE_URL}`);
+        
         let accessToken = null;
         let currentUser = null;
 
-        // Set default date to tomorrow
+        // Set default date to tomorrow and show environment badge
         document.addEventListener('DOMContentLoaded', () => {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('date').valueAsDate = tomorrow;
+            
+            // Show environment badge
+            const badge = document.getElementById('environmentBadge');
+            if (USE_PRODUCTION) {
+                badge.innerHTML = '🌍 <strong>PRODUCTION MODE</strong> - Using Render Backend';
+                badge.style.color = '#4ade80';
+            } else {
+                badge.innerHTML = '💻 <strong>LOCAL MODE</strong> - Using localhost:8000';
+                badge.style.color = '#fbbf24';
+            }
         });
 
         // Toggle between login and register forms

@@ -1,4 +1,4 @@
-name: nasa_space_app
+name: aeronimbus
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -35,27 +35,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   
-  # State management
-  flutter_riverpod: ^2.5.1
-  
-  # Charts
-  fl_chart: ^0.69.0
-  
-  # Date picker
-  intl: ^0.19.0
-  
-  # HTTP requests
-  http: ^1.2.2
-  
-  # File system access
-  path_provider: ^2.1.4
-  
-  # Sharing functionality
-  share_plus: ^10.0.2
-  
-  # Maps
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  # Google Fonts for better typography
+  google_fonts: ^4.0.4
+
+  # Persist simple key-values like user_location
+  shared_preferences: ^2.2.2
+
+  # Map packages
+  flutter_map: ^4.0.0
+  latlong2: ^0.8.1
 
 dev_dependencies:
   flutter_test:

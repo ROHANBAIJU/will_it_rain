@@ -114,8 +114,8 @@ class _MainTabsState extends State<MainTabs> {
       SettingsPage(),
     ];
 
-    // Load saved location; if missing, prompt user after first frame
-    _loadOrPromptLocation();
+  // Load saved location (do not prompt at startup)
+  _loadOrPromptLocation();
     
     _drawerItems = const [
       _DrawerItem(icon: Icons.dashboard_outlined, label: 'Dashboard'),
@@ -171,56 +171,10 @@ class _MainTabsState extends State<MainTabs> {
       AppState.location.value = saved;
       return;
     }
-    // Prompt after first frame to ensure scaffold is mounted
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showLocationDialog();
-    });
+    // Do not prompt the user at startup; leave location unset until user changes it in Settings.
   }
 
-  Future<void> _showLocationDialog() async {
-    final controller = TextEditingController(text: currentLocation);
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Set Your Location'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Enter your city or ZIP code'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'e.g., New York, NY',
-                ),
-                autofocus: true,
-                onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Skip'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-    if (result != null && result.isNotEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_location', result);
-      setState(() => currentLocation = result);
-      AppState.location.value = result;
-    }
-  }
+  // Location prompt removed — users can change location from Settings.
 
   // Custom drawer widget
   Widget _buildDrawer() {
@@ -511,12 +465,13 @@ class _SimpleHeader extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Search field on second row
-                SizedBox(
-                  width: double.infinity,
-                  child: _SearchField(
-                    initialText: currentLocation,
-                    onChanged: onLocationChanged,
+                // Display current location (no search)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    currentLocation,
+                    style: const TextStyle(color: Colors.white70),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -544,18 +499,10 @@ class _SimpleHeader extends StatelessWidget {
                 
                 const Spacer(),
                 
-                // Location search (constrained width)
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: (screenWidth * 0.4).clamp(200.0, 350.0),
-                      minWidth: 180.0,
-                    ),
-                    child: _SearchField(
-                      initialText: currentLocation,
-                      onChanged: onLocationChanged,
-                    ),
-                  ),
+                // Display current location (no search)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: Text(currentLocation, style: const TextStyle(color: Colors.white70)),
                 ),
               ],
             );

@@ -45,6 +45,9 @@ dependencies:
   # Secure storage for tokens
   flutter_secure_storage: ^9.0.0
 
+  # Google Sign-In
+  google_sign_in: ^6.1.5
+
   # Map packages
   flutter_map: ^4.0.0
   latlong2: ^0.8.1

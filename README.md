@@ -18,17 +18,18 @@ A sophisticated weather prediction application that combines NASA's 39-year hist
 
 
 
-Fontend Stack
-**Flutter (Dart)**Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
+###Fontend Stack
+-**Flutter (Dart)**- Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
                                                             ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
-**Figma** UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
+                                                            
+-**Figma**- UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
 
 
 
 ### Database & Storage
 - **Google Firestore** - NoSQL cloud database for user data and cache
 - **Firebase Admin SDK** - Server-side Firebase integration
-- **SharedPreferences** - Local data persistence
+-**SharedPreferences** - Local data persistence
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
 ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=flat-square&logo=google-cloud&logoColor=white)
 ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)

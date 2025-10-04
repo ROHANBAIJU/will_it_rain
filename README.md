@@ -26,9 +26,7 @@
 
 ### Database & Storage
 - **Google Firestore** - NoSQL cloud database for user data and cache ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
-
-- **Firebase Admin SDK**- Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) 
-
+ -**Firebase Admin SDK**- Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) 
 -**SharedPreferences**- Local data persistence
 
 

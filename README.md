@@ -10,27 +10,18 @@ A sophisticated weather prediction application that combines NASA's 39-year hist
 
 ## 🛠️ Tech Stack
 ### Backend Stack
-- **FastAPI** - Modern, high-performance Python web framework
-- **Python 3.12** - Programming language
-- **Pandas & NumPy** - Data processing and analysis
-- **Uvicorn** - ASGI server for production deployment
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat-square&logo=pandas&logoColor=white)
-![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=flat-square&logo=numpy&logoColor=white)
-![Uvicorn](https://img.shields.io/badge/uvicorn-4A90E2?style=flat-square&logo=uvicorn&logoColor=white)
+- **FastAPI** - Modern, high-performance Python web framework ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white)
+- **Python 3.12** - Programming language ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+- **Pandas & NumPy** - Data processing and analysis![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat-square&logo=pandas&logoColor=white)
+                                                   ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=flat-square&logo=numpy&logoColor=white)
+- **Uvicorn** - ASGI server for production deployment ![Uvicorn](https://img.shields.io/badge/uvicorn-4A90E2?style=flat-square&logo=uvicorn&logoColor=white)
 
 
 
 Fontend Stack
-**Flutter (Dart)**Cross-platform mobile and web development
-**Figma** UI/UX design and prototyping
-
-![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
-
-![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
-
-![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
+**Flutter (Dart)**Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
+                                                            ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
+**Figma** UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
 
 
 

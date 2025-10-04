@@ -27,14 +27,15 @@
 ### Database & Storage
 - **Google Firestore** - NoSQL cloud database for user data and cache ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
 
-- **Firebase Admin SDK** - Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
--**SharedPreferences** - Local data persistence
+- **Firebase Admin SDK**- Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) 
+
+-**SharedPreferences**- Local data persistence
 
 
 ### AI & ML
-- **Google Gemini AI** (gemini-2.0-flash-thinking-exp) - AI reasoning and verification![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
+- **Google Gemini AI** (gemini-2.0-flash-thinking-exp) - AI reasoning and verification  ![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
 - **Statistical Engine** - Custom Python algorithms for weather prediction
-- **NASA POWER API** - Historical weather data (39+ years)![NASA](https://img.shields.io/badge/NASA-0B3D91?style=flat-square&logo=nasa&logoColor=white)
+- **NASA POWER API** - Historical weather data (39+ years)  ![NASA](https://img.shields.io/badge/NASA-0B3D91?style=flat-square&logo=nasa&logoColor=white)
 
 ### Security & Authentication
 - **JWT (JSON Web Tokens)** - Stateless authentication

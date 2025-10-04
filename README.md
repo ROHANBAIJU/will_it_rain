@@ -1,4 +1,4 @@
-# 🌦️ Will It Rain
+ # 🌦️ Will It Rain
 
 ## 📋 Solution Overview
 
@@ -17,17 +17,17 @@
 
 
 ### Fontend Stack
-**Flutter (Dart)**Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
+-**Flutter (Dart)**- Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
                                                             ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
                                                             
-**Figma** UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
+-**Figma**- UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
 
 
 
 ### Database & Storage
-- **Google Firestore** - NoSQL cloud database for user data and cache ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
+ - **Google Firestore** - NoSQL cloud database for user data and cache ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
  -**Firebase Admin SDK**- Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) 
--**SharedPreferences**- Local data persistence
+ -**SharedPreferences**- Local data persistence
 
 
 ### AI & ML

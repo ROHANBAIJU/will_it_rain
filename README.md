@@ -205,7 +205,7 @@ flutter test
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/will_it_rain.git
+git clone https://github.com/ROHANBAIJU/will_it_rain.git
 cd will_it_rain
 
 # Start the backend

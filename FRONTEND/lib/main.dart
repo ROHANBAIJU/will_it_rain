@@ -14,7 +14,7 @@ class AeroNimbusRoot extends StatelessWidget {
     return MaterialApp(
       title: 'AeroNimbus',
       debugShowCheckedModeBanner: false,
-      theme: AeroNimbusTheme.dark(),
+      theme: AeroNimbusTheme.light(), // Using light purple theme
       home: const AeroNimbusApp(), // contains Auth + tabs wiring
     );
   }

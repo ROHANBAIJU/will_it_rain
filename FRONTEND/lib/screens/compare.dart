@@ -66,15 +66,15 @@ class _ComparePageState extends State<ComparePage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: const Color(0xFFF5F3FF),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white.withOpacity(0.20)),
+                            border: Border.all(color: const Color(0xFFE8E4F3)),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: comparisonType,
-                              dropdownColor: const Color(0xFF111827),
-                              style: const TextStyle(color: Colors.white),
+                              dropdownColor: Colors.white,
+                              style: const TextStyle(color: Color(0xFF2D2D2D)),
                               isExpanded: true, // Prevent overflow
                               items: const [
                                 DropdownMenuItem(
@@ -97,7 +97,8 @@ class _ComparePageState extends State<ComparePage> {
                         const SizedBox(height: 12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7C3AED), // purple-600
+                            backgroundColor: const Color(0xFF7C6BAD),
+                            foregroundColor: Colors.white,
                           ),
                           onPressed: () {},
                           child: const Text('Generate Report'),
@@ -112,15 +113,15 @@ class _ComparePageState extends State<ComparePage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: const Color(0xFFF5F3FF),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white.withOpacity(0.20)),
+                              border: Border.all(color: const Color(0xFFE8E4F3)),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: comparisonType,
-                                dropdownColor: const Color(0xFF111827),
-                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: Colors.white,
+                                style: const TextStyle(color: Color(0xFF2D2D2D)),
                                 isExpanded: true, // Prevent overflow
                                 items: const [
                                   DropdownMenuItem(
@@ -144,7 +145,8 @@ class _ComparePageState extends State<ComparePage> {
                         const SizedBox(width: 12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7C3AED), // purple-600
+                            backgroundColor: const Color(0xFF7C6BAD),
+                            foregroundColor: Colors.white,
                           ),
                           onPressed: () {},
                           child: const Text('Generate Report'),
@@ -166,7 +168,7 @@ class _ComparePageState extends State<ComparePage> {
                         width: isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth,
                         child: _textFieldWithLabel(
                           icon: Icons.location_pin,
-                          iconColor: const Color(0xFFA78BFA),
+                          iconColor: const Color(0xFF7C6BAD),
                           label: 'Location A',
                           controller: _locA,
                           hint: 'Enter location...',
@@ -176,7 +178,7 @@ class _ComparePageState extends State<ComparePage> {
                         width: isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth,
                         child: _textFieldWithLabel(
                           icon: Icons.location_pin,
-                          iconColor: const Color(0xFF10B981),
+                          iconColor: const Color(0xFF9B8AC4),
                           label: 'Location B',
                           controller: _locB,
                           hint: 'Enter location...',
@@ -205,14 +207,10 @@ class _ComparePageState extends State<ComparePage> {
                   child: _currentCard(
                     city: location1,
                     badgeText: 'Location A',
-                    badgeBg: const Color(0x33A78BFA),
-                    badgeFg: const Color(0xFFA78BFA),
-                    border: const Color(0x4DA78BFA),
-                    gradient: const [
-                      Color(0x662B0B3F), // purple-ish
-                      Color(0x66212B59), // indigo-ish
-                      Color(0x664B217D),
-                    ],
+                    badgeBg: const Color(0xFFE8E4F3),
+                    badgeFg: const Color(0xFF7C6BAD),
+                    border: const Color(0xFFE8E4F3),
+                    gradient: const [],
                   ),
                 ),
                 SizedBox(
@@ -220,14 +218,10 @@ class _ComparePageState extends State<ComparePage> {
                   child: _currentCard(
                     city: location2,
                     badgeText: 'Location B',
-                    badgeBg: const Color(0x3348BB78),
-                    badgeFg: const Color(0xFF6EE7B7),
-                    border: const Color(0x4D10B981),
-                    gradient: const [
-                      Color(0x661B3B2B), // emerald-ish
-                      Color(0x661C3F37), // teal-ish
-                      Color(0x6622492E),
-                    ],
+                    badgeBg: const Color(0xFFE8E4F3),
+                    badgeFg: const Color(0xFF9B8AC4),
+                    border: const Color(0xFFE8E4F3),
+                    gradient: const [],
                   ),
                 ),
               ],
@@ -294,9 +288,8 @@ class _ComparePageState extends State<ComparePage> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: const Color(0xFFF5F3FF),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.10)),
                     ),
                     padding: const EdgeInsets.all(12),
                     child: LayoutBuilder(
@@ -309,9 +302,9 @@ class _ComparePageState extends State<ComparePage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(a.day, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                  Text(a.day, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                   Text('${a.rain}% vs ${b.rain}% rain',
-                                      style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                                      style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                                 ],
                               ),
                               const SizedBox(height: 12),
@@ -322,17 +315,17 @@ class _ComparePageState extends State<ComparePage> {
                                     high: a.high,
                                     low: a.low,
                                     condition: a.condition,
-                                    nameColor: const Color(0xFFA78BFA),
+                                    nameColor: const Color(0xFF7C6BAD),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text('vs', style: TextStyle(color: Colors.white54)),
+                                  const Text('vs', style: TextStyle(color: Color(0xFF6B6B6B))),
                                   const SizedBox(height: 8),
                                   _forecastSide(
                                     name: location2.name,
                                     high: b.high,
                                     low: b.low,
                                     condition: b.condition,
-                                    nameColor: const Color(0xFF6EE7B7),
+                                    nameColor: const Color(0xFF9B8AC4),
                                   ),
                                 ],
                               ),
@@ -345,7 +338,7 @@ class _ComparePageState extends State<ComparePage> {
                               SizedBox(
                                 width: 72,
                                 child: Text(a.day,
-                                    style: const TextStyle(color: Colors.white)),
+                                    style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -358,12 +351,12 @@ class _ComparePageState extends State<ComparePage> {
                                         high: a.high,
                                         low: a.low,
                                         condition: a.condition,
-                                        nameColor: const Color(0xFFA78BFA),
+                                        nameColor: const Color(0xFF7C6BAD),
                                       ),
                                     ),
                                     const SizedBox(width: 16),
                                     const Text('vs',
-                                        style: TextStyle(color: Colors.white54)),
+                                        style: TextStyle(color: Color(0xFF6B6B6B))),
                                     const SizedBox(width: 16),
                                     Flexible(
                                       child: _forecastSide(
@@ -371,7 +364,7 @@ class _ComparePageState extends State<ComparePage> {
                                         high: b.high,
                                         low: b.low,
                                         condition: b.condition,
-                                        nameColor: const Color(0xFF6EE7B7),
+                                        nameColor: const Color(0xFF9B8AC4),
                                       ),
                                     ),
                                   ],
@@ -383,9 +376,9 @@ class _ComparePageState extends State<ComparePage> {
                                 children: [
                                   const Text('Rain Chance',
                                       style: TextStyle(
-                                          color: Colors.white60, fontSize: 12)),
+                                          color: Color(0xFF6B6B6B), fontSize: 12)),
                                   Text('${a.rain}% vs ${b.rain}%',
-                                      style: const TextStyle(color: Colors.white)),
+                                      style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ],
@@ -395,9 +388,9 @@ class _ComparePageState extends State<ComparePage> {
                     ),
                   ),
                   if (i != location1.forecast.length - 1)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(color: Colors.white.withOpacity(0.10)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(color: Color(0xFFE8E4F3)),
                     ),
                 ],
               );
@@ -417,7 +410,8 @@ class _ComparePageState extends State<ComparePage> {
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
+                      backgroundColor: const Color(0xFF7C6BAD),
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: () {},
                     child: const Text('Export as CSV'),
@@ -425,7 +419,8 @@ class _ComparePageState extends State<ComparePage> {
                   const SizedBox(height: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: const Color(0xFF9B8AC4),
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: () {},
                     child: const Text('Export as PNG'),
@@ -434,8 +429,8 @@ class _ComparePageState extends State<ComparePage> {
                   OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white.withOpacity(0.20)),
-                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFE8E4F3)),
+                      foregroundColor: const Color(0xFF7C6BAD),
                     ),
                     child: const Text('Share Comparison'),
                   ),
@@ -449,14 +444,16 @@ class _ComparePageState extends State<ComparePage> {
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
+                      backgroundColor: const Color(0xFF7C6BAD),
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: () {},
                     child: const Text('Export as CSV'),
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: const Color(0xFF9B8AC4),
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: () {},
                     child: const Text('Export as PNG'),
@@ -464,8 +461,8 @@ class _ComparePageState extends State<ComparePage> {
                   OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white.withOpacity(0.20)),
-                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFE8E4F3)),
+                      foregroundColor: const Color(0xFF7C6BAD),
                     ),
                     child: const Text('Share Comparison'),
                   ),
@@ -483,9 +480,15 @@ class _ComparePageState extends State<ComparePage> {
   static Widget _panel({required String title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -493,7 +496,7 @@ class _ComparePageState extends State<ComparePage> {
         children: [
           Text(title,
               style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF2D2D2D),
                   fontWeight: FontWeight.w600,
                   fontSize: 16)),
           const SizedBox(height: 12),
@@ -516,24 +519,24 @@ class _ComparePageState extends State<ComparePage> {
         Row(children: [
           Icon(icon, size: 18, color: iconColor),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white60)),
+          Text(label, style: const TextStyle(color: Color(0xFF6B6B6B))),
         ]),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Color(0xFF2D2D2D)),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white54),
+            hintStyle: const TextStyle(color: Color(0xFF9B9B9B)),
             filled: true,
-            fillColor: Colors.white.withOpacity(0.05),
+            fillColor: const Color(0xFFF5F3FF),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.20)),
+              borderSide: const BorderSide(color: Color(0xFFE8E4F3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.35)),
+              borderSide: const BorderSide(color: Color(0xFF7C6BAD), width: 2),
             ),
           ),
         ),
@@ -551,9 +554,15 @@ class _ComparePageState extends State<ComparePage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: gradient),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -562,7 +571,7 @@ class _ComparePageState extends State<ComparePage> {
             children: [
               Expanded(
                 child: Text(city.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600)),
               ),
               _badge(badgeText, bg: badgeBg, fg: badgeFg, border: border),
             ],
@@ -571,10 +580,10 @@ class _ComparePageState extends State<ComparePage> {
           Column(
             children: [
               Text('${city.current.temp}°C',
-                  style: const TextStyle(color: Colors.white, fontSize: 32)),
+                  style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 32, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Text(city.current.condition,
-                  style: const TextStyle(color: Colors.white60)),
+                  style: const TextStyle(color: Color(0xFF6B6B6B))),
             ],
           ),
           const SizedBox(height: 12),
@@ -601,9 +610,9 @@ class _ComparePageState extends State<ComparePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(k, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          Text(k, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
           const SizedBox(height: 2),
-          Text(v, style: const TextStyle(color: Colors.white)),
+          Text(v, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -630,9 +639,15 @@ class _ComparePageState extends State<ComparePage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -646,19 +661,19 @@ class _ComparePageState extends State<ComparePage> {
                   Expanded(
                     child: Text(title,
                         style: const TextStyle(
-                            color: Colors.white, fontSize: 16)),
+                            color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                   AnimatedRotation(
                     turns: isOpen ? 0.5 : 0.0,
                     duration: const Duration(milliseconds: 180),
-                    child: const Icon(Icons.expand_more, color: Colors.white60, size: 18),
+                    child: const Icon(Icons.expand_more, color: Color(0xFF7C6BAD), size: 18),
                   ),
                 ],
               ),
             ),
           ),
           if (isOpen)
-            Divider(height: 1, color: Colors.white.withOpacity(0.10)),
+            Divider(height: 1, color: const Color(0xFFE8E4F3)),
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
@@ -683,7 +698,7 @@ class _ComparePageState extends State<ComparePage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(12),
@@ -695,7 +710,7 @@ class _ComparePageState extends State<ComparePage> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: Colors.white)),
+                Text(label, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -706,7 +721,7 @@ class _ComparePageState extends State<ComparePage> {
                           Flexible(
                             child: Text(
                               '${v1.toStringAsFixed(v1 % 1 == 0 ? 0 : 1)}$unit',
-                              style: const TextStyle(color: Color(0xFFA78BFA)),
+                              style: const TextStyle(color: Color(0xFF7C6BAD), fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -716,7 +731,7 @@ class _ComparePageState extends State<ComparePage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text('vs', style: TextStyle(color: Colors.white54)),
+                    const Text('vs', style: TextStyle(color: Color(0xFF6B6B6B))),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Row(
@@ -727,7 +742,7 @@ class _ComparePageState extends State<ComparePage> {
                           Flexible(
                             child: Text(
                               '${v2.toStringAsFixed(v2 % 1 == 0 ? 0 : 1)}$unit',
-                              style: const TextStyle(color: Color(0xFF6EE7B7)),
+                              style: const TextStyle(color: Color(0xFF9B8AC4), fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.right,
                             ),
@@ -745,7 +760,7 @@ class _ComparePageState extends State<ComparePage> {
           return Row(
             children: [
               Expanded(
-                child: Text(label, style: const TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis),
+                child: Text(label, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 12),
               Flexible(
@@ -759,7 +774,7 @@ class _ComparePageState extends State<ComparePage> {
                           Flexible(
                             child: Text(
                               '${v1.toStringAsFixed(v1 % 1 == 0 ? 0 : 1)}$unit',
-                              style: const TextStyle(color: Color(0xFFA78BFA)),
+                              style: const TextStyle(color: Color(0xFF7C6BAD), fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.right,
                             ),
@@ -770,7 +785,7 @@ class _ComparePageState extends State<ComparePage> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Text('vs', style: TextStyle(color: Colors.white54)),
+                    const Text('vs', style: TextStyle(color: Color(0xFF6B6B6B))),
                     const SizedBox(width: 16),
                     Flexible(
                       child: Row(
@@ -780,7 +795,7 @@ class _ComparePageState extends State<ComparePage> {
                           Flexible(
                             child: Text(
                               '${v2.toStringAsFixed(v2 % 1 == 0 ? 0 : 1)}$unit',
-                              style: const TextStyle(color: Color(0xFF6EE7B7)),
+                              style: const TextStyle(color: Color(0xFF9B8AC4), fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -799,12 +814,12 @@ class _ComparePageState extends State<ComparePage> {
 
   Icon _trendIcon(double a, double b, bool higherIsBetter) {
     if (a == b) {
-      return const Icon(Icons.remove, color: Colors.white60, size: 18);
+      return const Icon(Icons.remove, color: Color(0xFF6B6B6B), size: 18);
     }
     final firstWins = higherIsBetter ? a > b : a < b;
     return Icon(
       firstWins ? Icons.trending_up : Icons.trending_down,
-      color: firstWins ? const Color(0xFF10B981) : const Color(0xFFDC2626),
+      color: firstWins ? const Color(0xFF7C6BAD) : const Color(0xFFDC2626),
       size: 18,
     );
   }
@@ -820,18 +835,18 @@ class _ComparePageState extends State<ComparePage> {
       children: [
         Text(
           name.length > 12 ? '${name.substring(0, 12)}...' : name, 
-          style: TextStyle(color: nameColor, fontSize: 12),
+          style: TextStyle(color: nameColor, fontSize: 12, fontWeight: FontWeight.w600),
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
         ),
         Text(
           '$high° / $low°', 
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
           overflow: TextOverflow.ellipsis,
         ),
         Text(
           condition, 
-          style: const TextStyle(color: Colors.white60, fontSize: 12),
+          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
           maxLines: 1,

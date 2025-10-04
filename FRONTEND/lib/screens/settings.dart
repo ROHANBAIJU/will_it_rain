@@ -105,9 +105,15 @@ class _SettingsPageState extends State<SettingsPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0x0DFFFFFF), // 5%
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0x1AFFFFFF)), // 10%
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -142,9 +148,9 @@ class _SettingsPageState extends State<SettingsPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        border: Border.all(color: const Color(0xFFE8E4F3)),
       ),
       child: Column(
         children: [
@@ -162,7 +168,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   Icon(
                     _getIconForSection(section),
-                    color: Colors.white70,
+                    color: const Color(0xFF7C6BAD),
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -170,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: Text(
                       section,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF2D2D2D),
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -178,7 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   Icon(
                     isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: Colors.white70,
+                    color: const Color(0xFF7C6BAD),
                     size: 20,
                   ),
                 ],
@@ -234,7 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(12),
       child: _panel(
         title: const Text('General Preferences',
-            style: TextStyle(color: Colors.white)),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
         child: Column(
           children: [
             _rowSetting(
@@ -246,7 +252,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   _pillButton('°C', active: tempUnit == 'C', onTap: () {
                     setState(() => tempUnit = 'C');
-                  }, activeColor: const Color(0xFFEAB308)),
+                  }, activeColor: const Color(0xFF7C6BAD)),
                   _pillOutline('°F', active: tempUnit == 'F', onTap: () {
                     setState(() => tempUnit = 'F');
                   }),
@@ -263,7 +269,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   _pillButton('km/h', active: windUnit == 'km/h', onTap: () {
                     setState(() => windUnit = 'km/h');
-                  }, activeColor: const Color(0xFF06B6D4)),
+                  }, activeColor: const Color(0xFF7C6BAD)),
                   _pillOutline('mph', active: windUnit == 'mph', onTap: () {
                     setState(() => windUnit = 'mph');
                   }),
@@ -275,16 +281,17 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Data Update Frequency',
-                    style: TextStyle(color: Colors.white)),
+                    style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500)),
                 const SizedBox(height: 6),
                 Text('Every ${updateFrequency.toInt()} hours',
-                    style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                    style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                 Slider(
                   value: updateFrequency,
                   min: 1,
                   max: 12,
                   divisions: 11,
                   label: '${updateFrequency.toInt()}h',
+                  activeColor: const Color(0xFF7C6BAD),
                   onChanged: (v) => setState(() => updateFrequency = v),
                 ),
               ],
@@ -301,7 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(12),
       child: _panel(
         title: const Text('Notification Settings',
-            style: TextStyle(color: Colors.white)),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
         child: Column(
           children: [
             _switchRow(
@@ -360,11 +367,11 @@ class _SettingsPageState extends State<SettingsPage> {
           _panel(
             title: Row(
               children: const [
-                Icon(Icons.storage, color: Colors.white70, size: 18),
+                Icon(Icons.storage, color: Color(0xFF7C6BAD), size: 18),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Data Sources & Transparency',
-                      style: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -374,9 +381,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0x0DFFFFFF),
+                          color: const Color(0xFFF5F3FF),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0x1AFFFFFF)),
+                          border: Border.all(color: const Color(0xFFE8E4F3)),
                         ),
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -389,11 +396,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Row(
                                     children: [
                                       const Icon(Icons.satellite_alt,
-                                          color: Color(0xFF06B6D4), size: 18),
+                                          color: Color(0xFF7C6BAD), size: 18),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(s.name,
-                                            style: const TextStyle(color: Colors.white)),
+                                            style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                       ),
                                     ],
                                   ),
@@ -404,20 +411,20 @@ class _SettingsPageState extends State<SettingsPage> {
                                     runSpacing: 4,
                                     children: [
                                       _badge(s.type,
-                                          bg: const Color(0x3348BB78),
-                                          fg: const Color(0xFF6EE7B7),
-                                          border: const Color(0x4D10B981)),
+                                          bg: const Color(0xFFE8E4F3),
+                                          fg: const Color(0xFF7C6BAD),
+                                          border: const Color(0xFFD1CBE8)),
                                       _badge(s.status,
-                                          bg: const Color(0x33A78BFA),
-                                          fg: const Color(0xFFA78BFA),
-                                          border: const Color(0x4DA78BFA)),
+                                          bg: const Color(0xFFE8E4F3),
+                                          fg: const Color(0xFF7C6BAD),
+                                          border: const Color(0xFFD1CBE8)),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
                                   // Description
                                   Text(s.description,
                                       style: const TextStyle(
-                                          color: Colors.white70, fontSize: 13)),
+                                          color: Color(0xFF6B6B6B), fontSize: 13)),
                                   const SizedBox(height: 8),
                                   // Metadata
                                   Wrap(
@@ -432,12 +439,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Row(
                                     children: [
                                       const Icon(Icons.access_time,
-                                          size: 14, color: Colors.white60),
+                                          size: 14, color: Color(0xFF9B9B9B)),
                                       const SizedBox(width: 4),
                                       Flexible(
                                         child: Text('Updated: ${s.lastUpdate}',
                                             style: const TextStyle(
-                                                color: Colors.white60,
+                                                color: Color(0xFF9B9B9B),
                                                 fontSize: 12),
                                             overflow: TextOverflow.ellipsis),
                                       ),
@@ -636,7 +643,7 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(12),
       child: _panel(
         title: const Text('Privacy & Data Usage',
-            style: TextStyle(color: Colors.white)),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -692,50 +699,71 @@ class _SettingsPageState extends State<SettingsPage> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x4DA78BFA)),
-        gradient: const LinearGradient(
-          colors: [Color(0x334C1D95), Color(0x33312E81)], // purple/indigo /20
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0x334C1D95),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.person, color: Color(0xFFA78BFA)),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        children: [
+          // Purple gradient header
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF6B5BA6), Color(0xFF8B7AB8)],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                const Text('Your Profile',
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
-                const SizedBox(height: 2),
-                ValueListenableBuilder<String?>(
-                  valueListenable: AppState.location,
-                  builder: (context, value, _) {
-                    final loc = value ?? 'Unknown location';
-                    return Text('Location: $loc',
-                        style: const TextStyle(color: Color(0xFFDDD6FE)));
-                  },
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Your Profile',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      ValueListenableBuilder<String?>(
+                        valueListenable: AppState.location,
+                        builder: (context, value, _) {
+                          final loc = value ?? 'Unknown location';
+                          return Text('Location: $loc',
+                              style: const TextStyle(color: Colors.white, fontSize: 13));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: _changeLocation,
+                  icon: const Icon(Icons.location_pin, size: 18),
+                  label: const Text('Change'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white),
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          OutlinedButton.icon(
-            onPressed: _changeLocation,
-            icon: const Icon(Icons.location_pin, size: 18),
-            label: const Text('Change'),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0x33FFFFFF)),
-              foregroundColor: Colors.white,
             ),
           ),
         ],
@@ -775,9 +803,16 @@ class _SettingsPageState extends State<SettingsPage> {
   static Widget _panel({required Widget title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        border: Border.all(color: const Color(0xFFE8E4F3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -803,10 +838,10 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: Colors.white)),
+              Text(label, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500)),
               const SizedBox(height: 2),
               Text(description,
-                  style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
             ],
           ),
         ),
@@ -831,13 +866,14 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? activeColor : const Color(0x0DFFFFFF),
+          color: active ? activeColor : const Color(0xFFF5F3FF),
           borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: active ? activeColor : const Color(0xFFE8E4F3)),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: active ? Colors.black : Colors.white,
+            color: active ? Colors.white : const Color(0xFF7C6BAD),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -850,8 +886,9 @@ class _SettingsPageState extends State<SettingsPage> {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: Color(0x33FFFFFF)),
-        foregroundColor: Colors.white,
+        side: const BorderSide(color: Color(0xFFE8E4F3)),
+        foregroundColor: const Color(0xFF7C6BAD),
+        backgroundColor: const Color(0xFFF5F3FF),
       ),
       child: Text(text),
     );
@@ -870,15 +907,15 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white)),
+              Text(title, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500)),
               const SizedBox(height: 2),
               Text(subtitle,
-                  style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
             ],
           ),
         ),
         const SizedBox(width: 12),
-        Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFF10B981)),
+        Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFF7C6BAD)),
       ],
     );
   }
@@ -886,19 +923,19 @@ class _SettingsPageState extends State<SettingsPage> {
   static Widget _metricCard(_Metric m) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        border: Border.all(color: const Color(0xFFE8E4F3)),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(m.label, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+          Text(m.label, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
           const SizedBox(height: 4),
-          Text(m.value, style: const TextStyle(color: Colors.white, fontSize: 22)),
+          Text(m.value, style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 22, fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(m.change, style: const TextStyle(color: Color(0xFF34D399), fontSize: 12)),
+          Text(m.change, style: const TextStyle(color: Color(0xFF7C6BAD), fontSize: 12)),
         ],
       ),
     );
@@ -924,8 +961,8 @@ class _SettingsPageState extends State<SettingsPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$k: ', style: const TextStyle(color: Color(0x66FFFFFF), fontSize: 12)),
-        Text(v, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+        Text('$k: ', style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 12)),
+        Text(v, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -965,15 +1002,16 @@ class _Metric {
 // --------- small text helpers (previously missing) ---------
 class _SectionTitle extends StatelessWidget {
   final String text;
-  const _SectionTitle(this.text, {super.key});
+  const _SectionTitle(this.text);
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
       style: const TextStyle(
-        color: Colors.white,
+        color: Color(0xFF2D2D2D),
         fontWeight: FontWeight.w600,
+        fontSize: 15,
       ),
     );
   }
@@ -981,7 +1019,7 @@ class _SectionTitle extends StatelessWidget {
 
 class _Bullet extends StatelessWidget {
   final String text;
-  const _Bullet(this.text, {super.key});
+  const _Bullet(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -990,11 +1028,11 @@ class _Bullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: Colors.white70)),
+          const Text('• ', style: TextStyle(color: Color(0xFF7C6BAD))),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 13),
             ),
           ),
         ],

@@ -69,11 +69,15 @@ class TransparencyPage extends StatelessWidget {
         // ----- Header -----
         Container(
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0x4DA78BFA)),
-            gradient: const LinearGradient(
-              colors: [Color(0x334C1D95), Color(0x33312E81)], // purple/indigo /20
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -82,10 +86,10 @@ class TransparencyPage extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0x334C1D95),
+                  color: const Color(0xFFE8E4F3),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.shield, color: Color(0xFFA78BFA), size: 24),
+                child: const Icon(Icons.shield, color: Color(0xFF7C6BAD), size: 24),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -93,11 +97,11 @@ class TransparencyPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Data Transparency & Sources',
-                        style: TextStyle(color: Colors.white, fontSize: 18)),
+                        style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 18, fontWeight: FontWeight.w600)),
                     SizedBox(height: 2),
                     Text(
                       'All weather predictions powered by NASA Earth Observation Data',
-                      style: TextStyle(color: Color(0xFFDDD6FE)),
+                      style: TextStyle(color: Color(0xFF7C6BAD)),
                     ),
                   ],
                 ),
@@ -129,9 +133,9 @@ class TransparencyPage extends StatelessWidget {
         _panel(
           title: Row(
             children: const [
-              Icon(Icons.storage, color: Colors.white70, size: 18),
+              Icon(Icons.storage, color: Color(0xFF7C6BAD), size: 18),
               SizedBox(width: 8),
-              Text('Primary Data Sources', style: TextStyle(color: Colors.white)),
+              Text('Primary Data Sources', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
             ],
           ),
           child: Column(
@@ -141,14 +145,14 @@ class TransparencyPage extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0x0DFFFFFF), // 5%
+                      color: const Color(0xFFF5F3FF),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0x1AFFFFFF)), // 10%
+                      border: Border.all(color: const Color(0xFFE8E4F3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.satellite_alt, color: Color(0xFF06B6D4), size: 18),
+                        const Icon(Icons.satellite_alt, color: Color(0xFF7C6BAD), size: 18),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -156,26 +160,26 @@ class TransparencyPage extends StatelessWidget {
                             children: [
                               Row(children: [
                                 Expanded(
-                                  child: Text(s.name, style: const TextStyle(color: Colors.white)),
+                                  child: Text(s.name, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                 ),
                                 _badge(
                                   s.type,
-                                  bg: const Color(0x3348BB78),
-                                  fg: const Color(0xFF6EE7B7),
-                                  border: const Color(0x4D10B981),
+                                  bg: const Color(0xFFE8E4F3),
+                                  fg: const Color(0xFF7C6BAD),
+                                  border: const Color(0xFFE8E4F3),
                                 ),
                                 const SizedBox(width: 6),
                                 _badge(
                                   s.status,
-                                  bg: const Color(0x33A78BFA),
-                                  fg: const Color(0xFFA78BFA),
-                                  border: const Color(0x4DA78BFA),
+                                  bg: const Color(0xFFE8E4F3),
+                                  fg: const Color(0xFF7C6BAD),
+                                  border: const Color(0xFFE8E4F3),
                                 ),
                               ]),
                               const SizedBox(height: 8),
                               Text(
                                 s.description,
-                                style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 13),
+                                style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 13),
                               ),
                               const SizedBox(height: 8),
                               Wrap(
@@ -187,7 +191,7 @@ class TransparencyPage extends StatelessWidget {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: const [
-                                      Icon(Icons.access_time, size: 14, color: Color(0x99FFFFFF)),
+                                      Icon(Icons.access_time, size: 14, color: Color(0xFF9B9B9B)),
                                       SizedBox(width: 4),
                                       // s.lastUpdate below
                                     ],
@@ -198,7 +202,7 @@ class TransparencyPage extends StatelessWidget {
                                       const SizedBox(width: 18), // align with icon space
                                       Text(
                                         'Updated: ${s.lastUpdate}',
-                                        style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12),
+                                        style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 12),
                                       ),
                                     ],
                                   ),
@@ -211,8 +215,8 @@ class TransparencyPage extends StatelessWidget {
                         OutlinedButton.icon(
                           onPressed: () {},
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0x33FFFFFF)), // 20%
-                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Color(0xFFE8E4F3)),
+                            foregroundColor: const Color(0xFF7C6BAD),
                           ),
                           icon: const Icon(Icons.open_in_new, size: 16),
                           label: const Text('View Source'),
@@ -231,9 +235,9 @@ class TransparencyPage extends StatelessWidget {
         _panel(
           title: Row(
             children: const [
-              Icon(Icons.download, color: Colors.white70, size: 18),
+              Icon(Icons.download, color: Color(0xFF7C6BAD), size: 18),
               SizedBox(width: 8),
-              Text('Download Raw Data', style: TextStyle(color: Colors.white)),
+              Text('Download Raw Data', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
             ],
           ),
           child: Column(
@@ -242,7 +246,7 @@ class TransparencyPage extends StatelessWidget {
               const Text(
                 'Access the raw weather data used in AeroNimbus for your own analysis and research. '
                 'All datasets include metadata and quality indicators.',
-                style: TextStyle(color: Color(0xB3FFFFFF)),
+                style: TextStyle(color: Color(0xFF6B6B6B)),
               ),
               const SizedBox(height: 12),
               LayoutBuilder(
@@ -259,9 +263,9 @@ class TransparencyPage extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0x0DFFFFFF),
+                                color: const Color(0xFFF5F3FF),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0x1AFFFFFF)),
+                                border: Border.all(color: const Color(0xFFE8E4F3)),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -269,23 +273,24 @@ class TransparencyPage extends StatelessWidget {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(f.format, style: const TextStyle(color: Colors.white)),
+                                      Text(f.format, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                       const SizedBox(height: 4),
                                       Text(
                                         f.description,
-                                        style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12),
+                                        style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         'Size: ${f.size}',
-                                        style: const TextStyle(color: Color(0x66FFFFFF), fontSize: 12),
+                                        style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 12),
                                       ),
                                     ],
                                   ),
                                   ElevatedButton(
                                     onPressed: () {},
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF7C3AED), // purple
+                                      backgroundColor: const Color(0xFF7C6BAD),
+                                      foregroundColor: Colors.white,
                                     ),
                                     child: const Text('Download'),
                                   ),
@@ -306,26 +311,26 @@ class TransparencyPage extends StatelessWidget {
 
         // ----- API Access -----
         _panel(
-          title: const Text('API Access', style: TextStyle(color: Colors.white)),
+          title: const Text('API Access', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Programmatic access to weather data and forecasts through our RESTful API.',
-                style: TextStyle(color: Color(0xB3FFFFFF)),
+                style: TextStyle(color: Color(0xFF6B6B6B)),
               ),
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0x8030313D),
+                  color: const Color(0xFFF5F3FF),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0x1AFFFFFF)),
+                  border: Border.all(color: const Color(0xFFE8E4F3)),
                 ),
                 child: const Text(
                   'GET https://api.aeronimbus.nasa.gov/v1/weather?lat=40.7128&lon=-74.0060',
-                  style: TextStyle(color: Color(0xFF6EE7B7), fontSize: 12),
+                  style: TextStyle(color: Color(0xFF7C6BAD), fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 12),
@@ -334,7 +339,8 @@ class TransparencyPage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: const Color(0xFF7C6BAD),
+                      foregroundColor: Colors.white,
                     ),
                     child: const Text('View API Docs'),
                   ),
@@ -342,8 +348,8 @@ class TransparencyPage extends StatelessWidget {
                   OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0x33FFFFFF)),
-                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFE8E4F3)),
+                      foregroundColor: const Color(0xFF7C6BAD),
                     ),
                     child: const Text('Get API Key'),
                   ),
@@ -357,7 +363,7 @@ class TransparencyPage extends StatelessWidget {
 
         // ----- Data Usage & Privacy -----
         _panel(
-          title: const Text('Data Usage & Privacy', style: TextStyle(color: Colors.white)),
+          title: const Text('Data Usage & Privacy', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
           child: Column(
             children: [
               LayoutBuilder(
@@ -373,7 +379,7 @@ class TransparencyPage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
-                            Text('Usage Guidelines', style: TextStyle(color: Colors.white)),
+                            Text('Usage Guidelines', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                             SizedBox(height: 6),
                             _Bullet('• All NASA data is publicly available and free to use'),
                             _Bullet('• Attribution to NASA required for commercial use'),
@@ -387,7 +393,7 @@ class TransparencyPage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
-                            Text('Privacy Policy', style: TextStyle(color: Colors.white)),
+                            Text('Privacy Policy', style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                             SizedBox(height: 6),
                             _Bullet('• No personal data is stored or transmitted'),
                             _Bullet('• Location data is processed locally'),
@@ -421,9 +427,15 @@ class TransparencyPage extends StatelessWidget {
   static Widget _panel({required Widget title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -440,19 +452,19 @@ class TransparencyPage extends StatelessWidget {
   static Widget _metricCard(_Metric m) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        border: Border.all(color: const Color(0xFFE8E4F3)),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(m.label, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+          Text(m.label, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
           const SizedBox(height: 4),
-          Text(m.value, style: const TextStyle(color: Colors.white, fontSize: 22)),
+          Text(m.value, style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
-          Text(m.change, style: const TextStyle(color: Color(0xFF34D399), fontSize: 12)),
+          Text(m.change, style: const TextStyle(color: Color(0xFF7C6BAD), fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -474,8 +486,8 @@ class TransparencyPage extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$k: ', style: const TextStyle(color: Color(0x66FFFFFF), fontSize: 12)), // 40% white
-        Text(v, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),     // 60% white
+        Text('$k: ', style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 12)),
+        Text(v, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -484,8 +496,8 @@ class TransparencyPage extends StatelessWidget {
     return OutlinedButton(
       onPressed: () {},
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: Color(0x33FFFFFF)),
-        foregroundColor: Colors.white,
+        side: const BorderSide(color: Color(0xFFE8E4F3)),
+        foregroundColor: const Color(0xFF7C6BAD),
       ),
       child: Text(text),
     );
@@ -519,12 +531,12 @@ class _DownloadFmt {
 
 class _Bullet extends StatelessWidget {
   final String text;
-  const _Bullet(this.text, {super.key});
+  const _Bullet(this.text);
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Text(text, style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 13)),
+      child: Text(text, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 13)),
     );
   }
 }

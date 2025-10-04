@@ -33,7 +33,7 @@ class _AlertsPageState extends State<AlertsPage> {
     final alert = _isAlert(current, threshold);
     return Icon(
       alert ? Icons.cancel : Icons.check_circle,
-      color: alert ? const Color(0xFFDC2626) : const Color(0xFF10B981),
+      color: alert ? const Color(0xFFDC2626) : const Color(0xFF7C6BAD),
       size: 20,
     );
   }
@@ -50,10 +50,14 @@ class _AlertsPageState extends State<AlertsPage> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0x4D10B981)), // emerald/30
-              gradient: const LinearGradient(
-                colors: [Color(0x3310B981), Color(0x330DB4A6)], // emerald/teal /20
-              ),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             padding: const EdgeInsets.all(16),
             child: LayoutBuilder(
@@ -65,7 +69,7 @@ class _AlertsPageState extends State<AlertsPage> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.check_circle, color: Color(0xFF10B981), size: 28),
+                          Icon(Icons.check_circle, color: Color(0xFF7C6BAD), size: 28),
                           SizedBox(width: 10),
                           Expanded(
                             child: _TitleBlock(
@@ -83,15 +87,15 @@ class _AlertsPageState extends State<AlertsPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           const Icon(Icons.notifications_active,
-                              color: Colors.white70, size: 18),
+                              color: Color(0xFF7C6BAD), size: 18),
                           const SizedBox(width: 8),
                           Switch(
                             value: alertsEnabled,
                             onChanged: (v) => setState(() => alertsEnabled = v),
                             thumbColor:
-                                const WidgetStatePropertyAll(Color(0xFF10B981)),
+                                const WidgetStatePropertyAll(Color(0xFF7C6BAD)),
                             trackColor:
-                                const WidgetStatePropertyAll(Color(0x3310B981)),
+                                const WidgetStatePropertyAll(Color(0xFFE8E4F3)),
                           ),
                         ],
                       ),
@@ -105,7 +109,7 @@ class _AlertsPageState extends State<AlertsPage> {
                       const Expanded(
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle, color: Color(0xFF10B981), size: 28),
+                            Icon(Icons.check_circle, color: Color(0xFF7C6BAD), size: 28),
                             SizedBox(width: 10),
                             Expanded(
                               child: _TitleBlock(
@@ -122,15 +126,15 @@ class _AlertsPageState extends State<AlertsPage> {
                       Row(
                         children: [
                           const Icon(Icons.notifications_active,
-                              color: Colors.white70, size: 18),
+                              color: Color(0xFF7C6BAD), size: 18),
                           const SizedBox(width: 8),
                           Switch(
                             value: alertsEnabled,
                             onChanged: (v) => setState(() => alertsEnabled = v),
                             thumbColor:
-                                const WidgetStatePropertyAll(Color(0xFF10B981)),
+                                const WidgetStatePropertyAll(Color(0xFF7C6BAD)),
                             trackColor:
-                                const WidgetStatePropertyAll(Color(0x3310B981)),
+                                const WidgetStatePropertyAll(Color(0xFFE8E4F3)),
                           ),
                         ],
                       ),
@@ -145,12 +149,12 @@ class _AlertsPageState extends State<AlertsPage> {
 
           // ---- Weather Conditions ----
           const Text('Weather Conditions',
-              style: TextStyle(color: Colors.white, fontSize: 16)),
+              style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           _grid3(children: [
             _thresholdCard(
               icon: Icons.grain, // raindrops alt
-              iconColor: const Color(0xFF06B6D4), // cyan
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Rain Probability',
               thresholdLabel: '${rain.toInt()}%',
               slider: Slider(
@@ -167,7 +171,7 @@ class _AlertsPageState extends State<AlertsPage> {
             ),
             _thresholdCard(
               icon: Icons.air,
-              iconColor: const Color(0xFF10B981), // emerald
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Wind Speed',
               thresholdLabel: '${wind.toInt()} km/h',
               slider: Slider(
@@ -184,7 +188,7 @@ class _AlertsPageState extends State<AlertsPage> {
             ),
             _thresholdCard(
               icon: Icons.thermostat,
-              iconColor: const Color(0xFFFACC15), // yellow
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Temperature',
               thresholdLabel: '${temp.toInt()}°C',
               slider: Slider(
@@ -205,12 +209,12 @@ class _AlertsPageState extends State<AlertsPage> {
 
           // ---- Health & Allergy Triggers ----
           const Text('Health & Allergy Triggers',
-              style: TextStyle(color: Colors.white, fontSize: 16)),
+              style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           _grid3(children: [
             _thresholdCard(
               icon: Icons.local_florist,
-              iconColor: const Color(0xFFFACC15), // yellow
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Pollen Count',
               thresholdLabel: '${pollen.toInt()} grains/m³',
               slider: Slider(
@@ -228,7 +232,7 @@ class _AlertsPageState extends State<AlertsPage> {
             ),
             _thresholdCard(
               icon: Icons.eco,
-              iconColor: const Color(0xFF10B981), // emerald
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Air Quality (AQI)',
               thresholdLabel: 'AQI ${aqi.toInt()}',
               slider: Slider(
@@ -245,7 +249,7 @@ class _AlertsPageState extends State<AlertsPage> {
             ),
             _thresholdCard(
               icon: Icons.biotech,
-              iconColor: const Color(0xFFA78BFA), // purple
+              iconColor: const Color(0xFF7C6BAD),
               title: 'Mold Risk',
               thresholdLabel: '${mold.toInt()}% Risk',
               slider: Slider(
@@ -270,8 +274,8 @@ class _AlertsPageState extends State<AlertsPage> {
             child: Column(
               children: [
                 _alertRow(
-                  bg: const Color(0x1AFFC107), // yellow/10-ish
-                  border: const Color(0x4DFFC107),
+                  bg: const Color(0xFFFFF8E7),
+                  border: const Color(0xFFFFE4A3),
                   icon: Icons.local_florist,
                   iconColor: const Color(0xFFFACC15),
                   title: 'Pollen Alert: Tree Pollen High',
@@ -279,53 +283,53 @@ class _AlertsPageState extends State<AlertsPage> {
                   reason:
                       'Warm, dry conditions increasing birch and oak pollen release',
                   badgeText: 'Active',
-                  badgeColor: const Color(0x4DF59E0B),
-                  badgeTextColor: const Color(0xFFFCD34D),
-                  badgeBorder: const Color(0x4DF59E0B),
+                  badgeColor: const Color(0xFFFFE4A3),
+                  badgeTextColor: const Color(0xFFD97706),
+                  badgeBorder: const Color(0xFFFFD96B),
                 ),
                 const SizedBox(height: 8),
                 _alertRow(
-                  bg: const Color(0x1AFFFFFF),
-                  border: const Color(0x1AFFFFFF),
+                  bg: const Color(0xFFF5F3FF),
+                  border: const Color(0xFFE8E4F3),
                   icon: Icons.eco,
-                  iconColor: const Color(0xFF10B981),
+                  iconColor: const Color(0xFF7C6BAD),
                   title: 'Air Quality Good',
                   time: '30 min ago • AQI dropped to 75',
                   reason: 'Light winds dispersing urban pollutants effectively',
                   badgeText: 'Clear',
-                  badgeColor: const Color(0x4D10B981),
-                  badgeTextColor: const Color(0xFF34D399),
-                  badgeBorder: const Color(0x4D10B981),
+                  badgeColor: const Color(0xFFE8E4F3),
+                  badgeTextColor: const Color(0xFF7C6BAD),
+                  badgeBorder: const Color(0xFFD1CBE8),
                 ),
                 const SizedBox(height: 8),
                 _alertRow(
-                  bg: const Color(0x1AA78BFA),
-                  border: const Color(0x4DA78BFA),
+                  bg: const Color(0xFFF5F3FF),
+                  border: const Color(0xFFE8E4F3),
                   icon: Icons.biotech,
-                  iconColor: const Color(0xFFA78BFA),
+                  iconColor: const Color(0xFF7C6BAD),
                   title: 'Mold Risk Elevated',
                   time: 'Yesterday • Mold risk reached 75%',
                   reason:
                       'High humidity and warm temperatures favoring mold spore growth',
                   badgeText: 'Past',
-                  badgeColor: const Color(0x4DA78BFA),
-                  badgeTextColor: const Color(0xFFA78BFA),
-                  badgeBorder: const Color(0x4DA78BFA),
+                  badgeColor: const Color(0xFFE8E4F3),
+                  badgeTextColor: const Color(0xFF9B8BC6),
+                  badgeBorder: const Color(0xFFD1CBE8),
                 ),
                 const SizedBox(height: 8),
                 _alertRow(
-                  bg: const Color(0x1AE11D48), // red-ish
-                  border: const Color(0x4DE11D48),
+                  bg: const Color(0xFFFEE2E2),
+                  border: const Color(0xFFFCA5A5),
                   icon: Icons.grain,
-                  iconColor: const Color(0xFF06B6D4),
+                  iconColor: const Color(0xFF7C6BAD),
                   title: 'Rain Alert Triggered',
                   time: '2 days ago • 85% chance of rain detected',
                   reason:
                       'Low pressure system moving in from the west bringing moisture',
                   badgeText: 'Past',
-                  badgeColor: const Color(0x4DFF4D4D),
-                  badgeTextColor: const Color(0xFFFF4D4D),
-                  badgeBorder: const Color(0x4DFF4D4D),
+                  badgeColor: const Color(0xFFFCA5A5),
+                  badgeTextColor: const Color(0xFFDC2626),
+                  badgeBorder: const Color(0xFFF87171),
                 ),
               ],
             ),
@@ -343,7 +347,8 @@ class _AlertsPageState extends State<AlertsPage> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7C3AED), // purple-600
+                        backgroundColor: const Color(0xFF7C6BAD),
+                        foregroundColor: Colors.white,
                       ),
                       onPressed: () {},
                       child: const Text('Test All Alerts'),
@@ -352,8 +357,8 @@ class _AlertsPageState extends State<AlertsPage> {
                     OutlinedButton(
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0x33FFFFFF)), // 20%
-                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFFE8E4F3)),
+                        foregroundColor: const Color(0xFF7C6BAD),
                       ),
                       child: const Text('Export Alert History'),
                     ),
@@ -367,7 +372,8 @@ class _AlertsPageState extends State<AlertsPage> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7C3AED), // purple-600
+                        backgroundColor: const Color(0xFF7C6BAD),
+                        foregroundColor: Colors.white,
                       ),
                       onPressed: () {},
                       child: const Text('Test All Alerts'),
@@ -375,8 +381,8 @@ class _AlertsPageState extends State<AlertsPage> {
                     OutlinedButton(
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0x33FFFFFF)), // 20%
-                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFFE8E4F3)),
+                        foregroundColor: const Color(0xFF7C6BAD),
                       ),
                       child: const Text('Export Alert History'),
                     ),
@@ -394,9 +400,15 @@ class _AlertsPageState extends State<AlertsPage> {
   static Widget _panel({required String title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF), // 5%
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)), // 10%
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -404,7 +416,7 @@ class _AlertsPageState extends State<AlertsPage> {
         children: [
           Text(title,
               style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF2D2D2D),
                   fontWeight: FontWeight.w600,
                   fontSize: 16)),
           const SizedBox(height: 12),
@@ -481,9 +493,15 @@ class _AlertsPageState extends State<AlertsPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF), // 5%
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)), // 10%
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -496,7 +514,7 @@ class _AlertsPageState extends State<AlertsPage> {
               Expanded(
                 child: Text(
                   title, 
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -508,7 +526,7 @@ class _AlertsPageState extends State<AlertsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Threshold',
-                  style: TextStyle(color: Colors.white60, fontSize: 12)),
+                  style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
               Flexible(
                 child: Text(
                   thresholdLabel,
@@ -523,13 +541,16 @@ class _AlertsPageState extends State<AlertsPage> {
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              activeTrackColor: const Color(0xFF7C6BAD),
+              inactiveTrackColor: const Color(0xFFE8E4F3),
+              thumbColor: const Color(0xFF7C6BAD),
             ),
             child: slider,
           ),
           // Status container with improved responsive layout
           Container(
             decoration: BoxDecoration(
-              color: const Color(0x0DFFFFFF), // 5%
+              color: const Color(0xFFF5F3FF),
               borderRadius: BorderRadius.circular(10),
             ),
             padding: const EdgeInsets.all(10),
@@ -541,7 +562,7 @@ class _AlertsPageState extends State<AlertsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(statusLeft,
-                          style: const TextStyle(color: Colors.white60, fontSize: 12),
+                          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
                           overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Row(
@@ -549,7 +570,7 @@ class _AlertsPageState extends State<AlertsPage> {
                         children: [
                           Flexible(
                             child: Text(statusRight,
-                                style: const TextStyle(color: Colors.white38, fontSize: 10),
+                                style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 10),
                                 overflow: TextOverflow.ellipsis),
                           ),
                           statusIcon,
@@ -567,10 +588,10 @@ class _AlertsPageState extends State<AlertsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(statusLeft,
-                                style: const TextStyle(color: Colors.white60, fontSize: 13),
+                                style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 13),
                                 overflow: TextOverflow.ellipsis),
                             Text(statusRight,
-                                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                                style: const TextStyle(color: Color(0xFF9B9B9B), fontSize: 11),
                                 overflow: TextOverflow.ellipsis),
                           ],
                         ),
@@ -604,13 +625,13 @@ class _TitleBlock extends StatelessWidget {
       children: [
         Text(title,
             style: const TextStyle(
-                color: Color(0xFF6EE7B7), // emerald-300
+                color: Color(0xFF2D2D2D),
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 2),
         const Text('All weather and health conditions within your defined thresholds',
-            style: TextStyle(color: Colors.white60, fontSize: 12)),
+            style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
         const SizedBox(height: 4),
-        Text(reason, style: const TextStyle(color: Color(0xFFBBF7D0), fontSize: 11)),
+        Text(reason, style: const TextStyle(color: Color(0xFF7C6BAD), fontSize: 11)),
       ],
     );
   }
@@ -651,7 +672,7 @@ Widget _alertRow({
                   Icon(icon, color: iconColor, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(title, style: const TextStyle(color: Colors.white)),
+                    child: Text(title, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -673,7 +694,7 @@ Widget _alertRow({
               ),
               const SizedBox(height: 8),
               Text(time,
-                  style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
               const SizedBox(height: 4),
               Text(
                 reason,
@@ -699,10 +720,10 @@ Widget _alertRow({
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: const TextStyle(color: Colors.white)),
+                          Text(title, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text(time,
-                              style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                           const SizedBox(height: 2),
                           Text(
                             reason,

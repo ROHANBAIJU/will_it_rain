@@ -227,7 +227,7 @@ class _MainTabsState extends State<MainTabs> {
   // Custom drawer widget
   Widget _buildDrawer() {
     return Drawer(
-      backgroundColor: const Color(0xFF0B0B10), // Dark background matching theme
+      backgroundColor: Colors.white,
       child: Column(
         children: [
           // Drawer header with app branding
@@ -238,9 +238,8 @@ class _MainTabsState extends State<MainTabs> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF3B0764), // Deep purple
-                  Color(0xFF1E1B4B), // Dark indigo
-                  Color(0xFF0B0B10), // Dark background
+                  Color(0xFF6B5BA6), // Deep purple
+                  Color(0xFF8B7AB8), // Soft lavender-purple
                 ],
               ),
             ),
@@ -279,7 +278,7 @@ class _MainTabsState extends State<MainTabs> {
                     const Text(
                       'NASA-Grade Weather Intelligence',
                       style: TextStyle(
-                        color: Color(0xFFCEB3FF),
+                        color: Color(0xFFE8E4F3),
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -290,14 +289,14 @@ class _MainTabsState extends State<MainTabs> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0x3310B981),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0x4D10B981)),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: const Text(
                         'Live Data',
                         style: TextStyle(
-                          color: Color(0xFF6EE7B7),
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 10,
                         ),
@@ -320,20 +319,19 @@ class _MainTabsState extends State<MainTabs> {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0x1AFACC15) : Colors.transparent,
+                    color: isSelected ? const Color(0xFFE8E4F3) : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
-                    border: isSelected ? Border.all(color: const Color(0x4DFACC15)) : null,
                   ),
                   child: ListTile(
                     leading: Icon(
                       item.icon,
-                      color: isSelected ? const Color(0xFFFACC15) : Colors.white70,
+                      color: isSelected ? const Color(0xFF7C6BAD) : const Color(0xFF2D2D2D),
                       size: 22,
                     ),
                     title: Text(
                       item.label,
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFFFACC15) : Colors.white,
+                        color: const Color(0xFF2D2D2D),
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
@@ -354,19 +352,19 @@ class _MainTabsState extends State<MainTabs> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: Colors.white.withOpacity(0.10)),
+                top: BorderSide(color: const Color(0xFFE5E5E5)),
               ),
             ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.white60, size: 16),
+                    const Icon(Icons.info_outline, color: Color(0xFF7C6BAD), size: 16),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
                         'Powered by NASA Earth Observation Data',
-                        style: TextStyle(color: Colors.white60, fontSize: 12),
+                        style: TextStyle(color: Color(0xFF666666), fontSize: 12),
                       ),
                     ),
                   ],
@@ -374,7 +372,7 @@ class _MainTabsState extends State<MainTabs> {
                 const SizedBox(height: 8),
                 Text(
                   'Last updated: ${TimeOfDay.now().format(context)}',
-                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                  style: const TextStyle(color: Color(0xFF999999), fontSize: 10),
                 ),
               ],
             ),
@@ -394,66 +392,11 @@ class _BackgroundGradient extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Base cosmic gradient
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF3B0764), // Deep purple
-                Color(0xFF1E1B4B), // Dark indigo
-                Color(0xFF0B0B10), // Dark background
-              ],
-            ),
-          ),
-        ),
-        // Starfield overlay
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: _StarfieldPainter(),
-            ),
-          ),
-        ),
-        // Subtle cosmic haze
-        Positioned(
-          top: -100,
-          left: -100,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0x33FACC15).withOpacity(0.3),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: -100,
-          right: -100,
-          child: Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0x3306B6D4).withOpacity(0.2),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+    // Clean light lavender background - no starfield
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F3FF), // Very light lavender
+      ),
     );
   }
 }
@@ -474,10 +417,14 @@ class _SimpleHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x33000000), // black/20
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(0.10)),
-        ),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: LayoutBuilder(
@@ -530,18 +477,18 @@ class _SimpleHeader extends StatelessWidget {
                 // Menu button to open drawer
                 IconButton(
                   onPressed: onMenuPressed,
-                  icon: const Icon(Icons.menu, color: Colors.white),
+                  icon: const Icon(Icons.menu, color: Color(0xFF2D2D2D)),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
                 const SizedBox(width: 16),
                 
                 // App branding (simplified)
-                const Icon(Icons.cloud, color: Color(0xFF7C3AED), size: 24),
+                const Icon(Icons.cloud, color: Color(0xFF7C6BAD), size: 24),
                 const SizedBox(width: 8),
                 const Text(
                   'AeroNimbus',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 
                 const Spacer(),
@@ -609,22 +556,22 @@ class _SearchFieldState extends State<_SearchField> {
   Widget build(BuildContext context) {
     return TextField(
       controller: _ctrl,
-      style: const TextStyle(color: Colors.white),
-      cursorColor: Colors.white70,
+      style: const TextStyle(color: Color(0xFF2D2D2D)),
+      cursorColor: const Color(0xFF7C6BAD),
       decoration: InputDecoration(
         hintText: 'Search location...',
-        hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
-        prefixIcon: const Icon(Icons.search, size: 18, color: Colors.white70),
+        hintStyle: TextStyle(color: const Color(0xFF2D2D2D).withOpacity(0.4), fontSize: 14),
+        prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF7C6BAD)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: const Color(0xFFF9F9F9),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.20)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.35)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF7C6BAD), width: 2),
         ),
       ),
       onChanged: widget.onChanged,
@@ -641,32 +588,7 @@ class _DrawerItem {
 }
 
 
-// Starfield painter for cosmic background
-class _StarfieldPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.6)
-      ..style = PaintingStyle.fill;
-
-    // Create a grid of stars
-    final stars = <Offset>[];
-    for (int i = 0; i < 100; i++) {
-      final x = (i * 37.0) % size.width;
-      final y = (i * 43.0) % size.height;
-      stars.add(Offset(x, y));
-    }
-
-    // Draw stars
-    for (final star in stars) {
-      final radius = (star.dx * 0.1 + star.dy * 0.1) % 2.0;
-      canvas.drawCircle(star, radius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
+// Starfield painter removed - using clean light theme
 
 // ---------------------------------------------------------------------
 // Minimal fallback AuthScreen (not used when your AuthPage is present)

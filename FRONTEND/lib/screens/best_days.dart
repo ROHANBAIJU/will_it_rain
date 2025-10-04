@@ -62,10 +62,10 @@ class _BestDaysPageState extends State<BestDaysPage> {
   }
 
   Color _scoreColor(int score) {
-    if (score >= 80) return const Color(0xFF10B981);
-    if (score >= 60) return const Color(0xFFF59E0B);
-    if (score >= 40) return const Color(0xFFF97316);
-    return const Color(0xFFEF4444);
+    if (score >= 80) return const Color(0xFF10B981); // Keep green for excellent
+    if (score >= 60) return const Color(0xFFF59E0B); // Keep amber for good
+    if (score >= 40) return const Color(0xFFF97316); // Keep orange for fair
+    return const Color(0xFFEF4444); // Keep red for poor
   }
 
   String _scoreText(int score) {
@@ -110,12 +110,12 @@ class _BestDaysPageState extends State<BestDaysPage> {
                 children: [
                   const Text(
                     'Optimal weather conditions for outdoor activities',
-                    style: TextStyle(color: Color(0xFF6EE7B7)),
+                    style: TextStyle(color: Color(0xFF7C6BAD)),
                   ),
                   const SizedBox(height: 12),
                   if (top5.isEmpty)
                     const Text('No excellent days this month.',
-                        style: TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: Color(0xFF6B6B6B))),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -123,9 +123,9 @@ class _BestDaysPageState extends State<BestDaysPage> {
                       for (final d in top5)
                         _badge(
                           '${_monthNames[selectedMonth - 1]} ${d.dateOnly} (${d.score}%)',
-                          bg: const Color(0x3348BB78),
-                          fg: const Color(0xFF6EE7B7),
-                          border: const Color(0x4D10B981),
+                          bg: const Color(0xFFE8E4F3),
+                          fg: const Color(0xFF7C6BAD),
+                          border: const Color(0xFFE8E4F3),
                         ),
                     ],
                   ),
@@ -137,7 +137,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
             // ---------- Calendar Heatmap ----------
             _panel(
               title: '${_monthNames[selectedMonth - 1]} $selectedYear Weather Outlook',
-              leading: const Icon(Icons.calendar_month, color: Colors.white70, size: 18),
+              leading: const Icon(Icons.calendar_month, color: Color(0xFF7C6BAD), size: 18),
               child: Column(
                 children: [
                   Row(
@@ -148,7 +148,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
                                 child: Text(
                                   s,
                                   style: const TextStyle(
-                                      color: Color(0x99FFFFFF), fontSize: 12),
+                                      color: Color(0xFF6B6B6B), fontSize: 12, fontWeight: FontWeight.w600),
                                 ),
                               ),
                             ))
@@ -180,7 +180,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
                 children: [
                   if (top5.isEmpty)
                     const Text('No top days this month.',
-                        style: TextStyle(color: Colors.white70)),
+                        style: TextStyle(color: Color(0xFF6B6B6B))),
                   for (int i = 0; i < top5.length; i++)
                     Padding(
                       padding: EdgeInsets.only(bottom: i == top5.length - 1 ? 0 : 8),
@@ -206,7 +206,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
                         width: itemW,
                         child: _criteriaBlock(
                           title: 'Temperature',
-                          color: const Color(0xFF6EE7B7),
+                          color: const Color(0xFF7C6BAD),
                           lines: const ['Optimal: 20–25°C', 'Perfect for outdoor activities'],
                         ),
                       ),
@@ -214,7 +214,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
                         width: itemW,
                         child: _criteriaBlock(
                           title: 'Rain Probability',
-                          color: const Color(0xFF06B6D4),
+                          color: const Color(0xFF9B8AC4),
                           lines: const ['Lower is better', 'Less than 20% is ideal'],
                         ),
                       ),
@@ -222,7 +222,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
                         width: itemW,
                         child: _criteriaBlock(
                           title: 'Wind Speed',
-                          color: const Color(0xFFFACC15),
+                          color: const Color(0xFFB5A7CF),
                           lines: const ['Under 20 km/h preferred', 'Gentle breeze for comfort'],
                         ),
                       ),
@@ -240,14 +240,16 @@ class _BestDaysPageState extends State<BestDaysPage> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED), // purple-600
+                    backgroundColor: const Color(0xFF7C6BAD),
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {},
                   child: const Text('Add to Calendar'),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981), // emerald-600
+                    backgroundColor: const Color(0xFF9B8AC4),
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {},
                   child: const Text('Set Reminders'),
@@ -255,8 +257,8 @@ class _BestDaysPageState extends State<BestDaysPage> {
                 OutlinedButton(
                   onPressed: () {},
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0x33FFFFFF)), // 20%
-                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFE8E4F3)),
+                    foregroundColor: const Color(0xFF7C6BAD),
                   ),
                   child: const Text('Export Schedule'),
                 ),
@@ -273,9 +275,15 @@ class _BestDaysPageState extends State<BestDaysPage> {
   static Widget _panel({required String title, Widget? leading, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -285,7 +293,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
             if (leading != null) ...[leading, const SizedBox(width: 8)],
             Text(title,
                 style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                    color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600, fontSize: 16)),
           ]),
           const SizedBox(height: 12),
           child,
@@ -320,8 +328,8 @@ class _BestDaysPageState extends State<BestDaysPage> {
 
     cells.addAll(days.map((d) {
       final base = _scoreColorStatic(d.score);
-      final bg = base.withAlpha(51); // ~20%
-      final ring = d.isToday ? const Color(0xFFFACC15) : const Color(0x1AFFFFFF);
+      final bg = base.withAlpha(51); // ~20% - keep traffic light colors
+      final ring = d.isToday ? const Color(0xFF7C6BAD) : const Color(0xFFE8E4F3);
       return Container(
         decoration: BoxDecoration(
           color: bg,
@@ -337,13 +345,13 @@ class _BestDaysPageState extends State<BestDaysPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text('${d.dateOnly}',
-                  style: const TextStyle(color: Colors.white, fontSize: 10)),
+                  style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 10, fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Icon(_iconFor(d.weather.icon),
-                  size: 12, color: const Color(0xB3FFFFFF)),
+                  size: 12, color: const Color(0xFF6B6B6B)),
               const SizedBox(height: 2),
               Text('${d.score}%',
-                  style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 8)),
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 8)),
             ],
           ),
         ),
@@ -373,7 +381,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
     final color = _scoreColor(day.score);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(12),
@@ -382,36 +390,36 @@ class _BestDaysPageState extends State<BestDaysPage> {
         children: [
           Row(
             children: [
-              Text('#$index', style: const TextStyle(color: Color(0xFFFACC15))),
+              Text('#$index', style: const TextStyle(color: Color(0xFF7C6BAD), fontWeight: FontWeight.w600)),
               const SizedBox(width: 10),
               Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${_monthNames[day.fullDate.month - 1]} ${day.dateOnly}', style: const TextStyle(color: Colors.white)),
-                  Text(_weekdayLabel(day.fullDate), style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                  Text('${_monthNames[day.fullDate.month - 1]} ${day.dateOnly}', style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
+                  Text(_weekdayLabel(day.fullDate), style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                 ],
               ),
             ],
           ),
           Row(
             children: [
-              Icon(_iconFor(day.weather.icon), color: const Color(0xB3FFFFFF), size: 20),
+              Icon(_iconFor(day.weather.icon), color: const Color(0xFF7C6BAD), size: 20),
               const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${day.weather.temp}°C', style: const TextStyle(color: Colors.white)),
-                  Text(day.weather.condition, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                  Text('${day.weather.temp}°C', style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
+                  Text(day.weather.condition, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                 ],
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${day.score}%', style: const TextStyle(color: Colors.white)),
-                  Text(_scoreText(day.score), style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12)),
+                  Text('${day.score}%', style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
+                  Text(_scoreText(day.score), style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                 ],
               ),
             ],
@@ -430,7 +438,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.18)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -439,7 +447,7 @@ class _BestDaysPageState extends State<BestDaysPage> {
           Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           for (final l in lines)
-            Text(l, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            Text(l, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 13)),
         ],
       ),
     );
@@ -516,7 +524,7 @@ class _LegendDot extends StatelessWidget {
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Flexible(child: Text(label, style: const TextStyle(color: Color(0x99FFFFFF)))),
+        Flexible(child: Text(label, style: const TextStyle(color: Color(0xFF6B6B6B)))),
       ],
     );
   }

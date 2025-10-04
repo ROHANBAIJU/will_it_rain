@@ -451,13 +451,13 @@ class _DashboardPageState extends State<DashboardPage> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFFFFFFF) : const Color(0x1AFFFFFF),
+          color: active ? const Color(0xFF7C6BAD) : const Color(0xFFF5F3FF),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: active ? const Color(0xFF3C126E) : Colors.white,
+            color: active ? Colors.white : const Color(0xFF7C6BAD),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -477,7 +477,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Color(0xFF6B6B6B)),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -487,7 +487,7 @@ class _DashboardPageState extends State<DashboardPage> {
           decoration: BoxDecoration(
             color: chipColor,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0x1AFFFFFF)),
+            border: Border.all(color: const Color(0xFFE8E4F3)),
           ),
           child: Text(
             badge,
@@ -509,28 +509,40 @@ class _HeroWeather extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // gradient & subtle starfield
+      // Clean white card with purple gradient accent
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xE61F1440), // purple-900 ~90%
-            Color(0xE61E1B4B), // indigo-800 ~90%
-            Color(0xE6331E6F), // purple-700 ~90%
-          ],
-        ),
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Stack(
         children: [
-          // star specks
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0.20,
-                child: CustomPaint(painter: _StarfieldPainterSmall()),
+          // Purple gradient background on top portion
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 180,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6B5BA6), // Deep purple
+                    Color(0xFF8B7AB8), // Soft lavender
+                  ],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
             ),
           ),
@@ -547,13 +559,13 @@ class _HeroWeather extends StatelessWidget {
                       children: const [
                         Icon(
                           Icons.location_on,
-                          color: Colors.white70,
+                          color: Colors.white,
                           size: 16,
                         ),
                         SizedBox(width: 6),
                         Text(
                           'New York, NY',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: Colors.white, fontSize: 14),
                         ),
                       ],
                     ),
@@ -563,16 +575,16 @@ class _HeroWeather extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0x3310B981),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: const Color(0x4D10B981),
-                        ), // /30
+                          color: Colors.white.withOpacity(0.3),
+                        ),
                       ),
                       child: const Text(
                         'Live',
                         style: TextStyle(
-                          color: Color(0xFF6EE7B7),
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -601,15 +613,16 @@ class _HeroWeather extends StatelessWidget {
                                   Text(
                                     '22°',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: const Color(0xFF2D2D2D),
                                       fontSize: isSmallScreen ? 48 : 64,
+                                      fontWeight: FontWeight.w300,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     'C',
                                     style: TextStyle(
-                                      color: Colors.white70,
+                                      color: const Color(0xFF6B6B6B),
                                       fontSize: isSmallScreen ? 18 : 24,
                                     ),
                                   ),
@@ -619,7 +632,7 @@ class _HeroWeather extends StatelessWidget {
                               Text(
                                 'Partly Cloudy',
                                 style: TextStyle(
-                                  color: Colors.white70,
+                                  color: const Color(0xFF6B6B6B),
                                   fontSize: isSmallScreen ? 16 : 18,
                                 ),
                               ),
@@ -665,12 +678,12 @@ class _HeroWeather extends StatelessWidget {
                                 Icon(
                                   Icons.umbrella,
                                   size: 16,
-                                  color: Color(0xFF06B6D4),
+                                  color: Color(0xFF7C6BAD),
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   '15% rain',
-                                  style: TextStyle(color: Colors.white70),
+                                  style: TextStyle(color: Color(0xFF6B6B6B)),
                                 ),
                               ],
                             ),
@@ -681,12 +694,12 @@ class _HeroWeather extends StatelessWidget {
                                 Icon(
                                   Icons.air,
                                   size: 16,
-                                  color: Color(0xFF10B981),
+                                  color: Color(0xFF7C6BAD),
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   '12 km/h',
-                                  style: TextStyle(color: Colors.white70),
+                                  style: TextStyle(color: Color(0xFF6B6B6B)),
                                 ),
                               ],
                             ),
@@ -700,7 +713,7 @@ class _HeroWeather extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Quick Stats grid - Make responsive
-                const Divider(color: Color(0x1AFFFFFF)),
+                const Divider(color: Color(0xFFE8E4F3)),
                 const SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -798,14 +811,9 @@ class _HeroWeather extends StatelessWidget {
                 // Action-Oriented Insight
                 Container(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0x4D059669),
-                        Color(0x4D0D9488),
-                      ], // emerald/teal /30
-                    ),
+                    color: const Color(0xFFE8E4F3),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0x3310B981)),
+                    border: Border.all(color: const Color(0xFFD1CBE8)),
                   ),
                   padding: const EdgeInsets.all(12),
                   child: Row(
@@ -814,7 +822,7 @@ class _HeroWeather extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
+                          color: const Color(0xFF7C6BAD),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         alignment: Alignment.center,
@@ -831,13 +839,13 @@ class _HeroWeather extends StatelessWidget {
                           children: [
                             Text(
                               'Perfect conditions for outdoor activities',
-                              style: TextStyle(color: Color(0xFF6EE7B7)),
+                              style: TextStyle(color: Color(0xFF7C6BAD), fontWeight: FontWeight.w600),
                             ),
                             SizedBox(height: 2),
                             Text(
                               'Low rain probability, comfortable temperature, light winds',
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: Color(0xFF6B6B6B),
                                 fontSize: 12,
                               ),
                             ),
@@ -874,9 +882,15 @@ class _TodayCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Column(
@@ -884,7 +898,7 @@ class _TodayCard extends StatelessWidget {
         children: [
           const Text(
             'Hourly Forecast',
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           SingleChildScrollView(
@@ -899,7 +913,7 @@ class _TodayCard extends StatelessWidget {
                         Text(
                           '${h['time']}',
                           style: const TextStyle(
-                            color: Colors.white60,
+                            color: Color(0xFF6B6B6B),
                             fontSize: 12,
                           ),
                         ),
@@ -911,7 +925,7 @@ class _TodayCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${h['temp']}',
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -941,9 +955,15 @@ class _TomorrowCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Column(
@@ -951,7 +971,7 @@ class _TomorrowCard extends StatelessWidget {
         children: [
           const Text(
             "Tomorrow's Forecast",
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           Row(
@@ -965,24 +985,24 @@ class _TomorrowCard extends StatelessWidget {
                       children: [
                         Text(
                           '26°',
-                          style: TextStyle(color: Colors.white, fontSize: 44),
+                          style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 44, fontWeight: FontWeight.w300),
                         ),
                         SizedBox(width: 6),
                         Text(
                           'C',
-                          style: TextStyle(color: Colors.white70, fontSize: 20),
+                          style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 20),
                         ),
                       ],
                     ),
                     SizedBox(height: 4),
                     Text(
                       'Sunny',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                      style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 16),
                     ),
                     SizedBox(height: 6),
                     Text(
                       'High: 26° / Low: 19°',
-                      style: TextStyle(color: Colors.white60, fontSize: 12),
+                      style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
                     ),
                   ],
                 ),
@@ -1019,7 +1039,7 @@ class _TomorrowCard extends StatelessWidget {
                         Text(
                           '${h['time']}',
                           style: const TextStyle(
-                            color: Colors.white60,
+                            color: Color(0xFF6B6B6B),
                             fontSize: 12,
                           ),
                         ),
@@ -1031,7 +1051,7 @@ class _TomorrowCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${h['temp']}',
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -1125,9 +1145,15 @@ class _TenDayCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Column(
@@ -1135,7 +1161,7 @@ class _TenDayCard extends StatelessWidget {
         children: [
           const Text(
             '10-Day Forecast',
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Column(
@@ -1148,7 +1174,7 @@ class _TenDayCard extends StatelessWidget {
                       bottom: BorderSide(
                         color: i == days.length - 1
                             ? const Color(0x00000000)
-                            : const Color(0x1AFFFFFF),
+                            : const Color(0xFFE8E4F3),
                       ),
                     ),
                   ),
@@ -1165,12 +1191,12 @@ class _TenDayCard extends StatelessWidget {
                           children: [
                             Text(
                               days[i]['day'] as String,
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500),
                             ),
                             Text(
                               days[i]['condition'] as String,
                               style: const TextStyle(
-                                color: Colors.white60,
+                                color: Color(0xFF6B6B6B),
                                 fontSize: 12,
                               ),
                             ),
@@ -1181,12 +1207,12 @@ class _TenDayCard extends StatelessWidget {
                         children: [
                           Text(
                             days[i]['high'] as String,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             days[i]['low'] as String,
-                            style: const TextStyle(color: Colors.white60),
+                            style: const TextStyle(color: Color(0xFF6B6B6B)),
                           ),
                         ],
                       ),
@@ -1212,11 +1238,11 @@ class _MiniStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.white70),
+        Icon(icon, size: 16, color: const Color(0xFF7C6BAD)),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
         ),
       ],
     );
@@ -1237,11 +1263,11 @@ class _QuickStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(color: color, fontSize: 18)),
+        Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w600)),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(color: Colors.white60, fontSize: 12),
+          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
         ),
       ],
     );
@@ -1249,25 +1275,4 @@ class _QuickStat extends StatelessWidget {
 }
 
 
-// ====== tiny star painter for hero background ======
-class _StarfieldPainterSmall extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = const Color(0xCCFFFFFF);
-    final pts = <Offset>[
-      Offset(10, 15),
-      Offset(30, 35),
-      Offset(50, 25),
-      Offset(size.width - 30, 40),
-      Offset(size.width - 60, 90),
-      Offset(size.width * .4, size.height * .3),
-      Offset(size.width * .7, size.height * .7),
-    ];
-    for (final o in pts) {
-      canvas.drawCircle(o, 1.0, p);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
+// Starfield painter removed for clean light theme

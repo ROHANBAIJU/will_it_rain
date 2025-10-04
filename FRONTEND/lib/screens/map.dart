@@ -13,10 +13,10 @@ class _MapPageState extends State<MapPage> {
   bool showSatellite = false;
 
   static const _mapLayers = [
-    _Layer(id: 'temperature', name: 'Temperature', icon: Icons.thermostat, color: Color(0xFFFACC15)),
-    _Layer(id: 'precipitation', name: 'Precipitation', icon: Icons.opacity, color: Color(0xFF06B6D4)),
-    _Layer(id: 'wind', name: 'Wind Speed', icon: Icons.air, color: Color(0xFF10B981)),
-    _Layer(id: 'pressure', name: 'Pressure', icon: Icons.bolt, color: Color(0xFFA78BFA)),
+    _Layer(id: 'temperature', name: 'Temperature', icon: Icons.thermostat, color: Color(0xFFFACC15)), // Keep yellow for temperature
+    _Layer(id: 'precipitation', name: 'Precipitation', icon: Icons.opacity, color: Color(0xFF06B6D4)), // Keep cyan for water
+    _Layer(id: 'wind', name: 'Wind Speed', icon: Icons.air, color: Color(0xFF10B981)), // Keep green for wind
+    _Layer(id: 'pressure', name: 'Pressure', icon: Icons.bolt, color: Color(0xFF7C6BAD)), // Update to purple theme
   ];
 
   final List<_Station> _stations = [
@@ -42,7 +42,7 @@ class _MapPageState extends State<MapPage> {
                   Row(children: const [
                     Flexible(
                       child: Text('Interactive Weather Map',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 18, fontWeight: FontWeight.w600),
                           overflow: TextOverflow.ellipsis),
                     ),
                     SizedBox(width: 10),
@@ -57,16 +57,16 @@ class _MapPageState extends State<MapPage> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.satellite_alt, color: Colors.white70, size: 18),
+                          const Icon(Icons.satellite_alt, color: Color(0xFF6B6B6B), size: 18),
                           const SizedBox(width: 6),
                           const Text('Satellite View',
-                              style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                           const SizedBox(width: 8),
                           Switch(
                             value: showSatellite,
                             onChanged: (v) => setState(() => showSatellite = v),
-                            thumbColor: const WidgetStatePropertyAll(Color(0xFF10B981)),
-                            trackColor: const WidgetStatePropertyAll(Color(0x3310B981)),
+                            thumbColor: const WidgetStatePropertyAll(Color(0xFF7C6BAD)),
+                            trackColor: const WidgetStatePropertyAll(Color(0xFFE8E4F3)),
                           ),
                         ],
                       ),
@@ -75,7 +75,8 @@ class _MapPageState extends State<MapPage> {
                         label: const Text('Add Location'),
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: const Color(0xFF7C6BAD),
+                          foregroundColor: Colors.white,
                         ),
                       ),
                     ],
@@ -90,23 +91,23 @@ class _MapPageState extends State<MapPage> {
                   Flexible(
                     child: Row(children: const [
                       Text('Interactive Weather Map',
-                          style: TextStyle(color: Colors.white, fontSize: 18)),
+                          style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 18, fontWeight: FontWeight.w600)),
                       SizedBox(width: 10),
                       _Badge(text: 'NASA Data'),
                     ]),
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.satellite_alt, color: Colors.white70, size: 18),
+                      const Icon(Icons.satellite_alt, color: Color(0xFF6B6B6B), size: 18),
                       const SizedBox(width: 6),
                       const Text('Satellite View',
-                          style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          style: TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                       const SizedBox(width: 8),
                       Switch(
                         value: showSatellite,
                         onChanged: (v) => setState(() => showSatellite = v),
-                        thumbColor: const WidgetStatePropertyAll(Color(0xFF10B981)),
-                        trackColor: const WidgetStatePropertyAll(Color(0x3310B981)),
+                        thumbColor: const WidgetStatePropertyAll(Color(0xFF7C6BAD)),
+                        trackColor: const WidgetStatePropertyAll(Color(0xFFE8E4F3)),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
@@ -114,7 +115,8 @@ class _MapPageState extends State<MapPage> {
                         label: const Text('Add Location'),
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: const Color(0xFF7C6BAD),
+                          foregroundColor: Colors.white,
                         ),
                       ),
                     ],
@@ -238,10 +240,10 @@ class _MapPageState extends State<MapPage> {
                       _panel(
                         title: Row(
                           children: const [
-                            Icon(Icons.layers, size: 18, color: Colors.white70),
+                            Icon(Icons.layers, size: 18, color: Color(0xFF7C6BAD)),
                             SizedBox(width: 8),
                             Text('Map Layers',
-                                style: TextStyle(color: Colors.white)),
+                                style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                           ],
                         ),
                         child: Column(
@@ -254,9 +256,9 @@ class _MapPageState extends State<MapPage> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: active ? const Color(0x1AFFFFFF) : const Color(0x0DFFFFFF),
+                                  color: active ? const Color(0xFFE8E4F3) : const Color(0xFFF5F3FF),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: active ? Border.all(color: const Color(0x33FFFFFF)) : null,
+                                  border: active ? Border.all(color: const Color(0xFF7C6BAD)) : null,
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -265,13 +267,13 @@ class _MapPageState extends State<MapPage> {
                                       Icon(layer.icon, color: layer.color),
                                       const SizedBox(width: 8),
                                       Text(layer.name,
-                                          style: const TextStyle(color: Colors.white)),
+                                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                     ]),
                                     Container(
                                       width: 8,
                                       height: 8,
                                       decoration: BoxDecoration(
-                                        color: active ? const Color(0xFF6EE7B7) : const Color(0x3DFFFFFF),
+                                        color: active ? const Color(0xFF7C6BAD) : const Color(0xFFE8E4F3),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -288,7 +290,7 @@ class _MapPageState extends State<MapPage> {
                       // Stations
                       _panel(
                         title: const Text('Weather Stations',
-                            style: TextStyle(color: Colors.white)),
+                            style: TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                         child: Column(
                           children: _stations.map((s) {
                             final active = s.active;
@@ -296,10 +298,10 @@ class _MapPageState extends State<MapPage> {
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: active ? const Color(0x1AFACC15) : const Color(0x0DFFFFFF),
+                                color: active ? const Color(0xFFE8E4F3) : const Color(0xFFF5F3FF),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: active ? const Color(0x4DFACC15) : const Color(0x1AFFFFFF),
+                                  color: active ? const Color(0xFF7C6BAD) : const Color(0xFFE8E4F3),
                                 ),
                               ),
                               child: Row(
@@ -310,23 +312,23 @@ class _MapPageState extends State<MapPage> {
                                     children: [
                                       Text(s.name,
                                           style: const TextStyle(
-                                              color: Colors.white, fontSize: 13)),
+                                              color: Color(0xFF2D2D2D), fontSize: 13, fontWeight: FontWeight.w600)),
                                       Text(s.condition,
                                           style: const TextStyle(
-                                              color: Colors.white60, fontSize: 11)),
+                                              color: Color(0xFF6B6B6B), fontSize: 11)),
                                     ],
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text('${s.temp}°C',
-                                          style: const TextStyle(color: Colors.white)),
+                                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                       Container(
                                         width: 8,
                                         height: 8,
                                         margin: const EdgeInsets.only(top: 6),
                                         decoration: BoxDecoration(
-                                          color: active ? const Color(0xFFFACC15) : const Color(0x61FFFFFF),
+                                          color: active ? const Color(0xFF7C6BAD) : const Color(0xFFE8E4F3),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -437,7 +439,7 @@ class _MapPageState extends State<MapPage> {
         ]);
       case 'pressure':
         return _legendRows(const [
-          _LegendRow(color: Color(0xFFA78BFA), label: 'Higher Pressure'),
+          _LegendRow(color: Color(0xFF7C6BAD), label: 'Higher Pressure'),
           _LegendRow(color: Color(0xFF6B7280), label: 'Lower Pressure'),
         ]);
       default:
@@ -454,7 +456,7 @@ class _MapPageState extends State<MapPage> {
                   children: [
                     Container(width: 10, height: 10, decoration: BoxDecoration(color: r.color, shape: BoxShape.circle)),
                     const SizedBox(width: 8),
-                    Text(r.label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                    Text(r.label, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
                   ],
                 ),
               ))
@@ -466,9 +468,15 @@ class _MapPageState extends State<MapPage> {
   static Widget _panel({Widget? title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x0DFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -564,11 +572,11 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0x3310B981),
+        color: const Color(0xFFE8E4F3),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0x4D10B981)),
+        border: Border.all(color: const Color(0xFFE8E4F3)),
       ),
-      child: Text(text, style: const TextStyle(color: Color(0xFF34D399), fontSize: 12)),
+      child: Text(text, style: const TextStyle(color: Color(0xFF7C6BAD), fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -596,10 +604,10 @@ class _StationPinState extends State<_StationPin> {
             width: s.active ? 10 : 8,
             height: s.active ? 10 : 8,
             decoration: BoxDecoration(
-              color: s.active ? const Color(0xFFFACC15) : Colors.white70,
+              color: s.active ? const Color(0xFF7C6BAD) : const Color(0xFF6B6B6B),
               shape: BoxShape.circle,
               boxShadow: s.active
-                  ? const [BoxShadow(color: Color(0x80FACC15), blurRadius: 12, spreadRadius: 2)]
+                  ? const [BoxShadow(color: Color(0x807C6BAD), blurRadius: 12, spreadRadius: 2)]
                   : null,
             ),
           ),
@@ -616,9 +624,15 @@ class _StationPinState extends State<_StationPin> {
                     width: isSmallScreen ? 120 : 140,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xE61F2937),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0x33FFFFFF)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -626,16 +640,16 @@ class _StationPinState extends State<_StationPin> {
                       children: [
                         Text(
                           s.name.length > 15 ? '${s.name.substring(0, 15)}...' : s.name, 
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 12, fontWeight: FontWeight.w600),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
                         const SizedBox(height: 2),
-                        const Divider(height: 8, color: Color(0x1AFFFFFF)),
-                        Text('${s.temp}°C', style: const TextStyle(color: Color(0xFFFACC15))),
+                        const Divider(height: 8, color: Color(0xFFE8E4F3)),
+                        Text('${s.temp}°C', style: const TextStyle(color: Color(0xFF7C6BAD), fontWeight: FontWeight.w600)),
                         Text(
                           s.condition, 
-                          style: const TextStyle(color: Colors.white60, fontSize: 11),
+                          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 11),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),

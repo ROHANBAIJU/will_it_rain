@@ -1,98 +1,117 @@
 import 'package:flutter/material.dart';
 
 class AeroNimbusTheme {
-  // ---- Core palette matching the cosmic theme from images ----
-  static const background = Color(0xFF0B0B10); // Dark cosmic background
-  static const foreground = Color(0xFFFFFFFF); // --foreground
-  static const card = Color(0x1AFFFFFF);       // Semi-transparent cards
-  static const popover = Color(0xFF2A1F3D);    // --popover
-  static const primary = Color(0xFF4B0082);    // --primary (Deep Cosmic Purple)
-  static const secondary = Color(0xFF10B981);  // --secondary (Emerald/Teal)
-  static const accent = Color(0xFFFACC15);     // --accent (Golden Yellow)
-  static const destructive = Color(0xFFDC2626); // --destructive (Crimson)
-  static const border = Color(0x33FFFFFF);     // rgba(255,255,255,0.2)
-  static const inputBg = Color(0x0DFFFFFF);    // --input-background
-  static const switchTrack = Color(0x3310B981); // --switch-background
-  static const ring = Color(0xFF06B6D4);       // Icy Cyan
+  // ---- Core palette inspired by Google Weather redesign ----
+  // Friendly purple-lavender theme with clean, approachable design
   
-  // Additional cosmic colors
-  static const cosmicPurple = Color(0xFF7C3AED); // Purple gradient
-  static const cosmicIndigo = Color(0xFF1E1B4B); // Dark indigo
-  static const cosmicGold = Color(0xFFFACC15);   // Golden accent
-  static const cosmicTeal = Color(0xFF06B6D4);   // Teal accent
+  static const background = Color(0xFFF5F3FF); // Very light lavender background
+  static const backgroundDark = Color(0xFF6B5BA6); // Deep purple for hero sections
+  static const foreground = Color(0xFF2D2D2D); // Dark charcoal for text
+  static const foregroundLight = Color(0xFFFFFFFF); // White for dark backgrounds
+  
+  static const card = Color(0xFFFFFFFF);       // Clean white cards
+  static const cardElevated = Color(0xFFF8F7FC); // Subtle purple tint for elevated cards
+  static const popover = Color(0xFFFFFFFF);    // White popovers
+  
+  static const primary = Color(0xFF7C6BAD);    // Medium purple (main brand color)
+  static const primaryDark = Color(0xFF5E4D8B); // Darker purple for hover/active
+  static const primaryLight = Color(0xFFE8E4F3); // Very light purple for backgrounds
+  
+  static const secondary = Color(0xFF10B981);  // Emerald/Teal (keep for success states)
+  static const accent = Color(0xFFFDB022);     // Warm yellow-orange
+  static const accentOrange = Color(0xFFFF9F43); // Soft orange
+  static const destructive = Color(0xFFEF4444); // Soft red
+  
+  static const border = Color(0xFFE5E5E5);     // Light gray borders
+  static const borderPurple = Color(0xFFD4CDED); // Light purple borders
+  static const inputBg = Color(0xFFF9F9F9);    // Very light gray inputs
+  static const switchTrack = Color(0xFFE8E4F3); // Light purple switch
+  static const ring = Color(0xFF7C6BAD);       // Medium purple focus ring
+  
+  // Additional friendly colors
+  static const purpleGradientStart = Color(0xFF6B5BA6); // Deep indigo-purple
+  static const purpleGradientEnd = Color(0xFF8B7AB8);   // Soft lavender-purple
+  static const lavender = Color(0xFFE8E4F3);   // Very light lavender
+  static const sunYellow = Color(0xFFFDB022);  // Warm sun color
+  static const moonYellow = Color(0xFFFFE17B); // Soft moon glow
 
-  // Charts
-  static const chart1 = Color(0xFFFACC15);
-  static const chart2 = Color(0xFF10B981);
-  static const chart3 = Color(0xFF06B6D4);
-  static const chart4 = Color(0xFF4B0082);
-  static const chart5 = Color(0xFFDC2626);
+  // Charts - softer, friendlier palette
+  static const chart1 = Color(0xFF7C6BAD); // Primary purple
+  static const chart2 = Color(0xFFFDB022); // Warm yellow
+  static const chart3 = Color(0xFF10B981); // Emerald
+  static const chart4 = Color(0xFFFF9F43); // Soft orange
+  static const chart5 = Color(0xFF60A5FA); // Sky blue
 
-  // Radii
-  static const radius = 14.0; // --radius: 0.875rem ≈ 14px
-  static const radiusSm = radius - 4;
-  static const radiusMd = radius - 2;
-  static const radiusLg = radius;
-  static const radiusXl = radius + 4;
+  // Radii - more rounded for friendly feel
+  static const radius = 16.0; // Increased roundness
+  static const radiusSm = 12.0;
+  static const radiusMd = 14.0;
+  static const radiusLg = 16.0;
+  static const radiusXl = 20.0;
 
-  static ThemeData dark() {
-    final base = ThemeData.dark();
+  static ThemeData light() {
+    final base = ThemeData.light();
 
     return base.copyWith(
       scaffoldBackgroundColor: background,
       primaryColor: primary,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: primary,
-        onPrimary: foreground,
+        onPrimary: foregroundLight,
         secondary: secondary,
-        onSecondary: foreground,
-        surface: background,
+        onSecondary: foregroundLight,
+        surface: card,
         onSurface: foreground,
         error: destructive,
-        onError: foreground,
-        // use tertiary for accent
+        onError: foregroundLight,
         tertiary: accent,
-        onTertiary: Color(0xFF1A1625),
+        onTertiary: foreground,
+        surfaceTint: Colors.transparent, // Removes material 3 tint
       ),
 
       // Borders / dividers
       dividerColor: border,
 
-      // Cards & sheets mirror --card / --popover
+      // Cards & sheets - clean white with subtle shadows
       cardTheme: CardThemeData(
         color: card,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: border),
         ),
         margin: EdgeInsets.zero,
       ),
 
       dialogTheme: DialogThemeData(
         backgroundColor: popover,
+        elevation: 8,
+        shadowColor: Colors.black.withOpacity(0.15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: border),
         ),
       ),
 
-      popupMenuTheme: const PopupMenuThemeData(
+      popupMenuTheme: PopupMenuThemeData(
         color: popover,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+        ),
       ),
 
-      // Inputs (text fields)
+      // Inputs (text fields) - clean with subtle borders
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: inputBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        hintStyle: const TextStyle(color: Color(0x66FFFFFF)), // ~0.4 opacity
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: TextStyle(color: foreground.withOpacity(0.4)),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: border),
           borderRadius: BorderRadius.circular(radiusMd),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: ring, width: 1.2),
+          borderSide: const BorderSide(color: primary, width: 2),
           borderRadius: BorderRadius.circular(radiusMd),
         ),
         border: OutlineInputBorder(
@@ -101,81 +120,94 @@ class AeroNimbusTheme {
         ),
       ),
 
-      // Buttons
+      // Buttons - rounded and friendly
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: foreground,
+          foregroundColor: foregroundLight,
+          elevation: 2,
+          shadowColor: primary.withOpacity(0.3),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(radiusLg),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: foreground,
-          side: const BorderSide(color: Color(0x33FFFFFF)), // ~0.2 opacity
+          foregroundColor: primary,
+          side: const BorderSide(color: borderPurple, width: 1.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(radiusLg),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
       ),
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: accent,
+          foregroundColor: primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusSm),
           ),
         ),
       ),
 
-      // Switches & sliders
-      switchTheme: const SwitchThemeData(
-        thumbColor: WidgetStatePropertyAll(secondary),
-        trackColor: WidgetStatePropertyAll(switchTrack),
+      // Switches & sliders - purple theme
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primary;
+          return Colors.grey.shade400;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryLight;
+          return Colors.grey.shade300;
+        }),
       ),
-      sliderTheme: const SliderThemeData(
-        activeTrackColor: secondary,
-        inactiveTrackColor: Color(0x33FFFFFF),
-        thumbColor: secondary,
-        overlayColor: Color(0x3310B981),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: primary,
+        inactiveTrackColor: primaryLight,
+        thumbColor: primary,
+        overlayColor: primary.withOpacity(0.2),
       ),
 
-      // AppBar
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0x1A000000),
+      // AppBar - clean with subtle shadow
+      appBarTheme: AppBarTheme(
+        backgroundColor: card,
         elevation: 0,
         foregroundColor: foreground,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withOpacity(0.05),
       ),
 
-      // Chips / badges helper via ChipTheme
+      // Chips / badges - purple tinted
       chipTheme: ChipThemeData(
-        backgroundColor: inputBg,
-        selectedColor: Color(0x3310B981), // secondary /20
-        labelStyle: const TextStyle(color: foreground),
+        backgroundColor: primaryLight,
+        selectedColor: primary,
+        labelStyle: TextStyle(color: foreground),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusSm),
-          side: const BorderSide(color: border),
         ),
       ),
 
-      // Typography approximating CSS base
+      // Typography - clean and readable
       textTheme: base.textTheme
           .apply(
             bodyColor: foreground,
             displayColor: foreground,
           )
           .copyWith(
-            headlineLarge: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-            headlineMedium: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-            titleLarge: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            bodyLarge: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-            labelLarge: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: foreground),
+            headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: foreground),
+            titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: foreground),
+            bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: foreground),
+            bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: foreground),
+            labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: foreground),
           ),
     );
   }
+  
+  // Keep dark theme for reference, but use light as default
+  static ThemeData dark() => light();
 }

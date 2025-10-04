@@ -97,7 +97,7 @@ graph TD
     G --> H[User-Friendly Insights]
 ```
 
-### 4. User Experience Flow
+### 2. User Experience Flow
 1. **Location Selection**: Map-based or search input
 2. **Date Selection**: Calendar picker for any future date
 3. **Prediction Display**: Probability, confidence, and AI insights

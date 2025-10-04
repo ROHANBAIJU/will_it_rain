@@ -293,3 +293,70 @@ def get_current_user_from_token(token: str) -> Optional[Dict[str, Any]]:
         "email": email,
         "name": name
     }
+
+
+def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    """
+    Get user by email address
+    
+    Args:
+        email: User's email
+    
+    Returns:
+        User data or None if not found
+    """
+    db = firestore_service.get_db()
+    if db is None:
+        return None
+    
+    try:
+        users_ref = db.collection('users')
+        user_query = users_ref.where('email', '==', email).limit(1).get()
+        
+        users_list = list(user_query)
+        if len(users_list) == 0:
+            return None
+        
+        user_doc = users_list[0]
+        user_data = user_doc.to_dict()
+        user_data['user_id'] = user_doc.id
+        
+        return user_data
+    except Exception as e:
+        print(f"❌ Get user by email failed: {e}")
+        return None
+
+
+def generate_access_token(user_id: str, email: str) -> Dict[str, str]:
+    """
+    Generate a new access token for a user
+    
+    Args:
+        user_id: User's ID
+        email: User's email
+    
+    Returns:
+        Access token data
+    """
+    # Get user name from database
+    db = firestore_service.get_db()
+    name = ""
+    
+    if db:
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user_doc = user_ref.get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                name = user_data.get('name', '')
+        except Exception:
+            pass
+    
+    access_token = create_access_token(
+        data={"sub": user_id, "email": email, "name": name}
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }

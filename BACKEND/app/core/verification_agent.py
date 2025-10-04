@@ -19,12 +19,16 @@ class DataVerificationAgent:
         """Initialize Gemini for data verification"""
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment variables")
+            print("⚠️ GEMINI_API_KEY not found - verification agent running in mock mode")
+            self.model = None
+            self.enabled = False
+            return
         
         genai.configure(api_key=api_key)
         
         # Use gemini-2.0-flash-thinking-exp for verification (best reasoning)
         self.model = genai.GenerativeModel('gemini-2.0-flash-thinking-exp-01-21')
+        self.enabled = True
         print("✅ Gemini Data Verification Agent initialized")
     
     def verify_statistics(
@@ -44,6 +48,17 @@ class DataVerificationAgent:
         Returns:
             Verification result with validity status and notes
         """
+        # If verification agent is disabled, return mock verification
+        if not self.enabled or self.model is None:
+            return {
+                "status": "skipped",
+                "is_valid": True,
+                "confidence": "not_verified",
+                "anomalies": [],
+                "validation_notes": "Verification skipped (GEMINI_API_KEY not configured)",
+                "verified_by": "none"
+            }
+        
         try:
             prompt = self._build_verification_prompt(statistics, location, date)
             

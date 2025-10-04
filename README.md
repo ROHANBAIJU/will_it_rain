@@ -17,10 +17,10 @@
 
 
 ### Fontend Stack
--**Flutter (Dart)**- Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
+- **Flutter (Dart)** - Cross-platform mobile and web development ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
                                                             ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
                                                             
--**Figma**- UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
+- **Figma** - UI/UX design and prototyping  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white)
 
 
 

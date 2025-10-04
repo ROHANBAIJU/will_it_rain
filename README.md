@@ -110,6 +110,7 @@ graph TD
 
 ### Weather Prediction
 ![Prediction](https://via.placeholder.com/400x800/4CAF50/FFFFFF?text=Weather+Prediction)
+
 ## 🔧 Installation & Setup
 
 ### Prerequisites

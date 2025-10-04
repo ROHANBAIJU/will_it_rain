@@ -14,8 +14,6 @@ A sophisticated weather prediction application that combines NASA's 39-year hist
 - **Python 3.12** - Programming language
 - **Pandas & NumPy** - Data processing and analysis
 - **Uvicorn** - ASGI server for production deployment
-### Backend Technologies
-
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat-square&logo=pandas&logoColor=white)
@@ -27,8 +25,6 @@ A sophisticated weather prediction application that combines NASA's 39-year hist
 Fontend Stack
 **Flutter (Dart)**Cross-platform mobile and web development
 **Figma** UI/UX design and prototyping
-
-### Frontend Technologies
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
 
@@ -42,7 +38,6 @@ Fontend Stack
 - **Google Firestore** - NoSQL cloud database for user data and cache
 - **Firebase Admin SDK** - Server-side Firebase integration
 - **SharedPreferences** - Local data persistence
-### Database
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
 ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=flat-square&logo=google-cloud&logoColor=white)
 ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
@@ -53,7 +48,7 @@ Fontend Stack
 - **Google Gemini AI** (gemini-2.0-flash-thinking-exp) - AI reasoning and verification
 - **Statistical Engine** - Custom Python algorithms for weather prediction
 - **NASA POWER API** - Historical weather data (39+ years)
-### AI & Data Sources
+#### AI & Data Sources
 ![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
 ![NASA](https://img.shields.io/badge/NASA-0B3D91?style=flat-square&logo=nasa&logoColor=white)
 ![OpenWeatherMap](https://img.shields.io/badge/OpenWeatherMap-1E90FF?style=flat-square&logo=openweathermap&logoColor=white)

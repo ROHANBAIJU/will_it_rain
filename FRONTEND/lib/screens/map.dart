@@ -1,5 +1,10 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../services/geocoding_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -11,6 +16,14 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   String activeLayer = 'temperature';
   bool showSatellite = false;
+
+  // Interactive map state (from Dashboard)
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
+  LatLng _interactiveMapCenter = LatLng(40.7128, -74.0060);
+  Marker? _interactiveSelectedMarker;
+  final MapController _interactiveMapController = MapController();
 
   static const _mapLayers = [
     _Layer(id: 'temperature', name: 'Temperature', icon: Icons.thermostat, color: Color(0xFFFACC15)), // Keep yellow for temperature
@@ -149,80 +162,112 @@ class _MapPageState extends State<MapPage> {
                       height: mapHeight,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Stack(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Background (satellite vs themed gradient)
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: showSatellite
-                                      ? const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [Color(0xFF1F2937), Color(0xFF374151), Color(0xFF111827)],
-                                        )
-                                      : const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [Color(0x662256B3), Color(0x6624338B), Color(0x661F1147)],
-                                        ),
+                            // Search field
+                            TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Search location or tap map',
+                                prefixIcon: const Icon(Icons.search, color: Color(0xFF7C6BAD)),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
                                 ),
                               ),
+                              onChanged: (v) {
+                                if (_debounce?.isActive ?? false) _debounce!.cancel();
+                                _debounce = Timer(const Duration(milliseconds: 400), () async {
+                                  if (v.trim().isEmpty) {
+                                    if (!mounted) return;
+                                    setState(() => _suggestions = []);
+                                    return;
+                                  }
+                                  try {
+                                    final res = await GeocodingService.search(v.trim(), limit: 5);
+                                    if (!mounted) return;
+                                    setState(() => _suggestions = res);
+                                  } catch (_) {
+                                    if (!mounted) return;
+                                    setState(() => _suggestions = []);
+                                  }
+                                });
+                              },
                             ),
-                            // Grid overlay
-                            const Positioned.fill(
-                              child: IgnorePointer(
-                                child: Opacity(
-                                  opacity: 0.20,
-                                  child: CustomPaint(painter: _GridPainter(cell: 50)),
+                            if (_suggestions.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                constraints: const BoxConstraints(maxHeight: 160),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _suggestions.length,
+                                  itemBuilder: (ctx, i) {
+                                    final s = _suggestions[i];
+                                    return ListTile(
+                                      title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
+                                      onTap: () {
+                                        setState(() {
+                                          _interactiveMapCenter = LatLng(s.lat, s.lon);
+                                          _interactiveSelectedMarker = Marker(
+                                            point: _interactiveMapCenter,
+                                            width: 40,
+                                            height: 40,
+                                            builder: (ctx) => const Icon(Icons.location_pin, color: Colors.red, size: 40),
+                                          );
+                                          _suggestions = [];
+                                          _searchController.text = s.displayName;
+                                        });
+                                        try {
+                                          _interactiveMapController.move(_interactiveMapCenter, 12.0);
+                                        } catch (_) {}
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
-                            ),
+                            ],
 
-                            // Weather layer overlays
-                            if (activeLayer == 'temperature') ..._temperatureBlobs(),
-                            if (activeLayer == 'precipitation') ..._precipitationBlobs(),
-                            if (activeLayer == 'wind') ..._windGlyphs(context, mapHeight),
-
-                            // Station pins (with responsive positioning)
-                            ..._stations.map((s) => _pinForStation(context, s, mapHeight)),
-
-                            // NASA attribution (responsive positioning)
-                            Positioned(
-                              left: 8,
-                              bottom: 8,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return _chip(
-                                    isWide ? '● Powered by NASA Earth Observation Data' : '● NASA Data',
-                                    bg: const Color(0x80000000),
-                                    border: const Color(0x33FFFFFF),
-                                    fg: Colors.white70,
-                                  );
-                                },
+                            const SizedBox(height: 8),
+                            // Map
+                            Expanded(
+                              child: FlutterMap(
+                                mapController: _interactiveMapController,
+                                options: MapOptions(
+                                  center: _interactiveMapCenter,
+                                  zoom: 12.0,
+                                  onTap: (tap, latlng) async {
+                                    if (!mounted) return;
+                                    setState(() {
+                                      _interactiveMapCenter = latlng;
+                                      _interactiveSelectedMarker = Marker(
+                                        point: latlng,
+                                        width: 40,
+                                        height: 40,
+                                        builder: (ctx) => const Icon(Icons.location_pin, color: Colors.red, size: 40),
+                                      );
+                                    });
+                                    try {
+                                      _interactiveMapController.move(latlng, 12.0);
+                                    } catch (_) {}
+                                  },
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName: 'com.example.aeronimbus',
+                                  ),
+                                  MarkerLayer(markers: [if (_interactiveSelectedMarker != null) _interactiveSelectedMarker!]),
+                                ],
                               ),
                             ),
-                            // Coordinates (responsive)
-                            Positioned(
-                              left: 8,
-                              top: 8,
-                              child: _chip(
-                                isWide ? 'Lat: 40.7128°N, Lng: 74.0060°W' : '40.71°N, 74.01°W',
-                                bg: const Color(0x80000000),
-                                border: const Color(0x33FFFFFF),
-                                fg: Colors.white70,
-                              ),
-                            ),
-                            // Scale (responsive)
-                            Positioned(
-                              right: 8,
-                              bottom: 8,
-                              child: _chip(
-                                isWide ? 'Scale: 1:100,000' : '1:100k',
-                                bg: const Color(0x80000000),
-                                border: const Color(0x33FFFFFF),
-                                fg: Colors.white70,
-                              ),
+
+                            const SizedBox(height: 8),
+                            Text(
+                              'Lat: ${_interactiveMapCenter.latitude.toStringAsFixed(5)}, Lon: ${_interactiveMapCenter.longitude.toStringAsFixed(5)}',
+                              style: const TextStyle(color: Color(0xFF2D2D2D), fontSize: 12),
                             ),
                           ],
                         ),
@@ -534,7 +579,6 @@ class _Blob extends StatelessWidget {
   final double? top, left, right, bottom, w, h;
   final Color color;
   const _Blob({
-    super.key,
     this.top,
     this.left,
     this.right,
@@ -565,7 +609,7 @@ class _Blob extends StatelessWidget {
 
 class _Badge extends StatelessWidget {
   final String text;
-  const _Badge({super.key, required this.text});
+  const _Badge({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -583,7 +627,7 @@ class _Badge extends StatelessWidget {
 
 class _StationPin extends StatefulWidget {
   final _Station station;
-  const _StationPin({super.key, required this.station});
+  const _StationPin({required this.station});
 
   @override
   State<_StationPin> createState() => _StationPinState();

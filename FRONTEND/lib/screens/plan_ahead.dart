@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_client.dart';
+import '../services/geocoding_service.dart';
+import 'dart:async';
 import '../widgets/weather_visualization.dart';
 
 class PlanAheadWidget extends StatefulWidget {
@@ -12,7 +14,10 @@ class PlanAheadWidget extends StatefulWidget {
 
 class _PlanAheadWidgetState extends State<PlanAheadWidget> {
   final TextEditingController _activityController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final MapController _mapController = MapController();
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
   
   LatLng _mapCenter = LatLng(40.7128, -74.0060); // Default: New York
   Marker? _selectedMarker;
@@ -304,14 +309,70 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'Lat: ${_mapCenter.latitude.toStringAsFixed(4)}, Lon: ${_mapCenter.longitude.toStringAsFixed(4)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B6B6B),
-                        fontWeight: FontWeight.w500,
+                    // Search bar for Plan Ahead location
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter city or ZIP code',
+                        prefixIcon: const Icon(Icons.search, color: Color(0xFF7C6BAD)),
+                        filled: true,
+                        fillColor: const Color(0xFFF9F9F9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                        ),
                       ),
+                      onChanged: (v) {
+                        if (_debounce?.isActive ?? false) _debounce!.cancel();
+                        _debounce = Timer(const Duration(milliseconds: 400), () async {
+                          if (v.trim().isEmpty) {
+                            if (!mounted) return;
+                            setState(() => _suggestions = []);
+                            return;
+                          }
+                          try {
+                            final res = await GeocodingService.search(v.trim(), limit: 5);
+                            if (!mounted) return;
+                            setState(() => _suggestions = res);
+                          } catch (_) {
+                            if (!mounted) return;
+                            setState(() => _suggestions = []);
+                          }
+                        });
+                      },
                     ),
+                    if (_suggestions.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 160),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _suggestions.length,
+                          itemBuilder: (ctx, i) {
+                            final s = _suggestions[i];
+                            return ListTile(
+                              title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
+                              onTap: () {
+                                setState(() {
+                                  _mapCenter = LatLng(s.lat, s.lon);
+                                  _selectedMarker = Marker(
+                                    point: _mapCenter,
+                                    builder: (_) => const Icon(
+                                      Icons.location_on,
+                                      color: Color(0xFF7C6BAD),
+                                      size: 40,
+                                    ),
+                                  );
+                                  _suggestions = [];
+                                  _searchController.text = s.displayName;
+                                });
+                                _mapController.move(_mapCenter, 13.0);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Container(
                       height: 250,

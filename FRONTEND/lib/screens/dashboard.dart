@@ -6,6 +6,8 @@ import 'package:flutter_map/flutter_map.dart';
 
 import 'package:latlong2/latlong.dart';
 import '../services/geocoding_service.dart';
+import '../state/app_state.dart';
+import '../services/api_client.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
@@ -28,6 +30,80 @@ class _DashboardPageState extends State<DashboardPage> {
   LatLng _mapCenter = LatLng(40.7128, -74.0060);
   Marker? _selectedMarker;
   final MapController _mapController = MapController();
+
+  late final VoidCallback _locationListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _locationListener = () async {
+      final loc = AppState.location.value;
+      if (loc == null || loc.trim().isEmpty) return;
+      try {
+        final res = await GeocodingService.search(loc.trim(), limit: 1);
+        if (res.isNotEmpty) {
+          final s = res.first;
+          if (!mounted) return;
+          setState(() {
+            _mapCenter = LatLng(s.lat, s.lon);
+            _selectedMarker = Marker(
+              point: _mapCenter,
+              width: 40,
+              height: 40,
+              builder: (ctx) => const Icon(
+                Icons.location_pin,
+                color: Colors.red,
+                size: 40,
+              ),
+            );
+            _searchController.text = s.displayName;
+          });
+          try {
+            _mapController.move(_mapCenter, 12.0);
+          } catch (_) {}
+        }
+      } catch (_) {}
+    };
+
+    // Register listener
+    AppState.location.addListener(_locationListener);
+
+    // Weather state
+    _loadingCurrentWeather = true;
+    _currentWeatherData = null;
+
+    // Load initial weather for default center
+    _loadCurrentWeather();
+  }
+
+  bool _loadingCurrentWeather = false;
+  Map<String, dynamic>? _currentWeatherData;
+
+  Future<void> _loadCurrentWeather() async {
+    setState(() => _loadingCurrentWeather = true);
+    try {
+      final data = await ApiClient.instance.getJson(
+        '/weather/current?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}',
+      );
+      if (!mounted) return;
+      setState(() {
+        _currentWeatherData = data;
+        _loadingCurrentWeather = false;
+      });
+    } catch (e) {
+      // ignore errors but stop loading
+      if (!mounted) return;
+      setState(() => _loadingCurrentWeather = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    AppState.location.removeListener(_locationListener);
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +289,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               itemBuilder: (context, idx) {
                                 final s = _suggestions[idx];
                                 return ListTile(
-                                  title: Text(s.displayName, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                                  title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
                                   onTap: () {
                                     // center map and add marker
                                     setState(() {
@@ -249,6 +325,40 @@ class _DashboardPageState extends State<DashboardPage> {
                       options: MapOptions(
                         center: _mapCenter,
                         zoom: 12,
+                        // Allow tapping to place a pin anywhere on the map
+                        onTap: (tapPos, latlng) async {
+                          if (!mounted) return;
+                          setState(() {
+                            _mapCenter = latlng;
+                            _selectedMarker = Marker(
+                              point: _mapCenter,
+                              width: 40,
+                              height: 40,
+                              builder: (ctx) => const Icon(
+                                Icons.location_pin,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                            );
+                          });
+                          try {
+                            _mapController.move(_mapCenter, 12.0);
+                          } catch (_) {}
+
+                          // Load weather for tapped coordinates
+                          _loadCurrentWeather();
+
+                          // Try reverse geocoding to a friendly name and update search box / app state
+                          try {
+                            final place = await GeocodingService.reverse(latlng.latitude, latlng.longitude);
+                            if (place != null && mounted) {
+                              setState(() {
+                                _searchController.text = place.displayName;
+                                AppState.location.value = place.displayName;
+                              });
+                            }
+                          } catch (_) {}
+                        },
                       ),
                       children: [
                         TileLayer(
@@ -271,7 +381,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       children: [
                         Text(
                           'Lat: ${_mapCenter.latitude.toStringAsFixed(5)}, Lon: ${_mapCenter.longitude.toStringAsFixed(5)}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(color: Colors.black, fontSize: 12),
                         ),
                       ],
                     ),
@@ -302,13 +412,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   SizedBox(width: 8),
                   Text(
                     'Calendar Integration',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Color(0xFF000000)),
                   ),
                 ],
               ),
               trailing: Icon(
                 isCalendarOpen ? Icons.expand_less : Icons.expand_more,
-                color: Colors.white70,
+                color: Colors.black54,
                 size: 20,
               ),
               backgroundColor: const Color(0x0DFFFFFF),
@@ -322,7 +432,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     children: [
                       const Text(
                         'Connect your calendar to see weather forecasts for your events and get alerts for outdoor activities.',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: Color(0xFF6B6B6B)),
                       ),
                       const SizedBox(height: 12),
                       // Calendar provider tabs (Google / Outlook)
@@ -338,8 +448,8 @@ class _DashboardPageState extends State<DashboardPage> {
                             children: [
                               TabBar(
                                 isScrollable: false,
-                                labelColor: Colors.white,
-                                unselectedLabelColor: const Color(0xB3FFFFFF),
+                                labelColor: Colors.black,
+                                unselectedLabelColor: const Color(0xB36B6B6B),
                                 indicatorColor: const Color(0xFFFACC15),
                                 tabs: const [
                                   Tab(
@@ -429,13 +539,6 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
   }
 
   // --- small helpers ---

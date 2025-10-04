@@ -26,8 +26,10 @@ import 'screens/settings.dart';
 import 'screens/transparency.dart';
 import 'theme/aeronimbus_theme.dart';
 import 'state/app_state.dart';
+import 'services/geocoding_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/plan_ahead.dart';
+import 'dart:async';
 /// Public entry used by main.dart -> runApp(const AeroNimbusApp());
 class AeroNimbusApp extends StatelessWidget {
   const AeroNimbusApp({super.key});
@@ -173,43 +175,91 @@ class _MainTabsState extends State<MainTabs> {
       AppState.location.value = saved;
       return;
     }
-    // Prompt after first frame to ensure scaffold is mounted
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showLocationDialog();
-    });
+    // Do not prompt at startup — user requested popup removed.
   }
 
   Future<void> _showLocationDialog() async {
     final controller = TextEditingController(text: currentLocation);
+    List<PlaceSuggestion> suggestions = [];
+    Timer? debounce;
+
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: const Text('Set Your Location'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Enter your city or ZIP code'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'e.g., New York, NY',
-                ),
-                autofocus: true,
-                onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
-              ),
-            ],
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Enter your city or ZIP code'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g., New York, NY',
+                    ),
+                    autofocus: true,
+                    onChanged: (v) {
+                      if (debounce?.isActive ?? false) debounce!.cancel();
+                      debounce = Timer(const Duration(milliseconds: 400), () async {
+                        if (v.trim().isEmpty) {
+                          if (!mounted) return;
+                          setState(() => suggestions = []);
+                          return;
+                        }
+                        try {
+                          final res = await GeocodingService.search(v.trim(), limit: 5);
+                          if (!mounted) return;
+                          setState(() => suggestions = res);
+                        } catch (_) {
+                          if (!mounted) return;
+                          setState(() => suggestions = []);
+                        }
+                      });
+                    },
+                    onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+                  ),
+                  if (suggestions.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 160),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: suggestions.length,
+                        itemBuilder: (ctx, i) {
+                          final s = suggestions[i];
+                          return ListTile(
+                            title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
+                            onTap: () {
+                              controller.text = s.displayName;
+                              setState(() => suggestions = []);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
+              onPressed: () {
+                debounce?.cancel();
+                Navigator.of(context).pop(null);
+              },
               child: const Text('Skip'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () {
+                debounce?.cancel();
+                Navigator.of(context).pop(controller.text.trim());
+              },
               child: const Text('Save'),
             ),
           ],
@@ -443,7 +493,7 @@ class _SimpleHeader extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: onMenuPressed,
-                      icon: const Icon(Icons.menu, color: Colors.white),
+                      icon: const Icon(Icons.menu, color: Color(0xFF2D2D2D)),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -460,14 +510,6 @@ class _SimpleHeader extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Search field on second row
-                SizedBox(
-                  width: double.infinity,
-                  child: _SearchField(
-                    initialText: currentLocation,
-                    onChanged: onLocationChanged,
-                  ),
-                ),
               ],
             );
           } else {
@@ -493,19 +535,7 @@ class _SimpleHeader extends StatelessWidget {
                 
                 const Spacer(),
                 
-                // Location search (constrained width)
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: (screenWidth * 0.4).clamp(200.0, 350.0),
-                      minWidth: 180.0,
-                    ),
-                    child: _SearchField(
-                      initialText: currentLocation,
-                      onChanged: onLocationChanged,
-                    ),
-                  ),
-                ),
+                // (Search removed from header)
               ],
             );
           }

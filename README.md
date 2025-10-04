@@ -122,10 +122,10 @@ graph TD
 
 ## 📱 Screenshots & Demo
 
-<div align="center">
 
 
-### Prerequisites
+
+## Prerequisites
 - Python 3.8+
 - Flutter SDK 3.9.2+
 - Firebase project

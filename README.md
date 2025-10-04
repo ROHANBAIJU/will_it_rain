@@ -4,15 +4,13 @@
 
 **Will It Rain** is designed to provide quick and accurate weather information, with a specific focus on precipitation forecasts. Whether you're planning a trip, a picnic, or just deciding whether to grab an umbrella, this tool gives you the essential details about the probability of rain in your location.
 
-**AI-Powered Weather Prediction using NASA Data**
 
-A sophisticated weather prediction application that combines NASA's 39-year historical weather data with statistical analysis and AI reasoning to provide accurate, transparent rainfall predictions for any location and date.
 
 ## 🛠️ Tech Stack
 ### Backend Stack
 - **FastAPI** - Modern, high-performance Python web framework ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white)
 - **Python 3.12** - Programming language ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-- **Pandas & NumPy** - Data processing and analysis![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat-square&logo=pandas&logoColor=white)
+- **Pandas & NumPy** - Data processing and analysis ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=flat-square&logo=pandas&logoColor=white)
                                                    ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=flat-square&logo=numpy&logoColor=white)
 - **Uvicorn** - ASGI server for production deployment ![Uvicorn](https://img.shields.io/badge/uvicorn-4A90E2?style=flat-square&logo=uvicorn&logoColor=white)
 
@@ -27,12 +25,10 @@ A sophisticated weather prediction application that combines NASA's 39-year hist
 
 
 ### Database & Storage
-- **Google Firestore** - NoSQL cloud database for user data and cache
-- **Firebase Admin SDK** - Server-side Firebase integration
+- **Google Firestore** - NoSQL cloud database for user data and cache ![Firestore](https://img.shields.io/badge/Firestore-FF6B35?style=flat-square&logo=firebase&logoColor=white)
+
+- **Firebase Admin SDK** - Server-side Firebase integration ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
 -**SharedPreferences** - Local data persistence
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
-
-
 
 
 ### AI & ML
@@ -103,8 +99,6 @@ graph TD
 - 📈 **Comparison Tools**: Multi-location weather comparison
 
 ## 📱 Screenshots & Demo
-
-
 
 
 ## Prerequisites

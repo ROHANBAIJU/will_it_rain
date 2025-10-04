@@ -40,7 +40,8 @@ class ReasoningAgent:
         date_str: str,
         statistics: Dict[str, Any],
         confidence_score: float,
-        missing_data_alert: Optional[Dict[str, Any]] = None
+        missing_data_alert: Optional[Dict[str, Any]] = None,
+        activity: Optional[str] = None
     ) -> str:
         """
         Build a comprehensive prompt for Gemini with all weather context.
@@ -73,11 +74,17 @@ class ReasoningAgent:
             if missing_years > 0:
                 missing_context = f"\n\n⚠️ Note: This prediction is for a future date. We're missing {missing_years} years of data (confidence: {confidence_score:.0%}). The prediction is based on historical patterns, but actual conditions may vary."
         
-        prompt = f"""You are a friendly and knowledgeable weather assistant helping someone plan their day.
+        # Build activity context
+        activity_context = ""
+        if activity:
+            activity_context = f"\n\n**Planned Activity**: {activity.title()}\nProvide specific recommendations for this activity considering the weather conditions."
+        
+        prompt = f"""You are AI Nimbus, a friendly and knowledgeable weather assistant helping someone plan their day.
 
 **Location**: Latitude {lat}, Longitude {lon}
 **Date**: {month_name} {day}
 **Historical Data**: Based on {data_years} years of weather records
+{activity_context}
 
 **Weather Statistics:**
 - Precipitation Probability: {rain_prob:.1f}%
@@ -93,7 +100,8 @@ Provide a natural, conversational weather insight in 3-4 sentences that includes
 1. Rain likelihood in simple terms (e.g., "unlikely to rain", "high chance of showers")
 2. Temperature description (e.g., "pleasant weather", "hot day", "cool evening")
 3. Practical recommendation for the day (clothing, activities, precautions)
-4. Also mention the name of the place of the location of the coordinates in a friendly way, if you cant get the name of the location just say your area or something but dont use the coordinates in your response.
+4. {f"Specific advice for {activity}" if activity else "General activity suggestions"}
+5. Mention the place name (if you can determine it from coordinates), otherwise say "your area"
 Keep it friendly, concise, and actionable. Speak directly to the user (use "you" and "your").
 """
         
@@ -107,10 +115,14 @@ Keep it friendly, concise, and actionable. Speak directly to the user (use "you"
         date_str: str,
         statistics: Dict[str, Any],
         confidence_score: float,
-        missing_data_alert: Optional[Dict[str, Any]] = None
+        missing_data_alert: Optional[Dict[str, Any]] = None,
+        activity: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate AI-powered weather insight using Gemini.
+        
+        Args:
+            activity: Optional planned activity (e.g., "picnic", "trekking", "wedding")
         
         Returns:
             Dict with 'reasoning' (str) and 'generated_by' (str)
@@ -128,7 +140,8 @@ Keep it friendly, concise, and actionable. Speak directly to the user (use "you"
                 date_str=date_str,
                 statistics=statistics,
                 confidence_score=confidence_score,
-                missing_data_alert=missing_data_alert
+                missing_data_alert=missing_data_alert,
+                activity=activity
             )
             
             # Generate response

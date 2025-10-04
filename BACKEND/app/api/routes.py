@@ -3,6 +3,7 @@ from app.core import nasa_data_handler, statistical_engine
 from app.core.reasoning_agent import get_reasoning_agent
 from app.core.verification_agent import get_verification_agent
 from app.services import firestore_service
+from app.services.current_weather_service import CurrentWeatherService
 from app.api.auth_routes import get_current_user
 from datetime import datetime
 import re
@@ -21,11 +22,41 @@ async def health_check():
     return {"status": "ok", "message": "Will It Rain API is running!"}
 
 
+@router.get("/weather/current", tags=["Weather"])
+async def get_current_weather(
+    lat: float = Query(..., description="Latitude of the location"),
+    lon: float = Query(..., description="Longitude of the location"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get current weather conditions for a location using NASA POWER API.
+    
+    **Requires Authentication**: Include `Authorization: Bearer <token>` header
+    
+    Returns real-time weather data including:
+    - Temperature (Celsius and Fahrenheit)
+    - Weather condition (sunny, cloudy, rainy, snowy, etc.)
+    - Precipitation
+    - Humidity
+    - Wind speed
+    - Cloud cover
+    - Atmospheric pressure
+    """
+    print(f"🌤️ Current weather request from user: {current_user['email']} for ({lat}, {lon})")
+    
+    try:
+        weather_data = CurrentWeatherService.get_current_weather(lat, lon)
+        return weather_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch current weather: {str(e)}")
+
+
 @router.get("/predict", tags=["Prediction"])
 async def predict_weather(
     lat: float = Query(..., description="Latitude of the location"),
     lon: float = Query(..., description="Longitude of the location"),
     date: str = Query(..., description="Date in YYYY-MM-DD format", regex=r"\d{4}-\d{2}-\d{2}"),
+    activity: str = Query(None, description="Planned activity (e.g., 'picnic', 'trekking', 'wedding')"),
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -38,13 +69,14 @@ async def predict_weather(
     - Incremental updates: Only fetches new years when needed
     - Missing data alerts: Warns when recent data is unavailable
     - Confidence scoring: Indicates prediction reliability
-    - AI-powered insights: Natural language recommendations
+    - AI-powered insights: Natural language recommendations tailored to your activity
     
     The weather_predictions cache is universal (shared by all users).
     """
     
     # Log the authenticated user making the request
-    print(f"📊 Prediction request from user: {current_user['email']} ({current_user['name']})")
+    activity_text = f" for activity: {activity}" if activity else ""
+    print(f"📊 Prediction request from user: {current_user['email']} ({current_user['name']}){activity_text}")
     try:
         # ============================================================
         # PHASE 3: SMART CACHING LOGIC
@@ -128,7 +160,8 @@ async def predict_weather(
                         lat, lon, date,
                         statistics,
                         confidence_score,
-                        missing_data_alert
+                        missing_data_alert,
+                        activity
                     )
                     
                     response = {
@@ -189,7 +222,8 @@ async def predict_weather(
                         lat, lon, date,
                         cached_data['statistics'],
                         cached_data['confidence_score'],
-                        missing_data_alert
+                        missing_data_alert,
+                        activity
                     )
                     
                     # Update cache with AI insight
@@ -274,7 +308,8 @@ async def predict_weather(
             lat, lon, date,
             statistics,
             confidence_score,
-            missing_data_alert
+            missing_data_alert,
+            activity
         )
         
         # Save to cache with AI insight and verification status

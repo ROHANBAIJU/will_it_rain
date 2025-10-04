@@ -1,8 +1,8 @@
- # 🌦️ Will It Rain
+ # 🌦️ AeroNimbus
 
 ## 📋 Solution Overview
 
-**Will It Rain** is designed to provide quick and accurate weather information, with a specific focus on precipitation forecasts. Whether you're planning a trip, a picnic, or just deciding whether to grab an umbrella, this tool gives you the essential details about the probability of rain in your location.
+**AeroNimbus** is designed to provide quick and accurate weather information, with a specific focus on precipitation forecasts. Whether you're planning a trip, a picnic, or just deciding whether to grab an umbrella, this tool gives you the essential details about the probability of rain in your location.
 
 
 

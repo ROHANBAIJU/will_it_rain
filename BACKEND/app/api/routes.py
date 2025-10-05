@@ -361,13 +361,40 @@ async def predict_weather(
 
 
 class PredictRequest(BaseModel):
-    lat: float
-    lon: float
+    lat: Optional[float] = None
+    lon: Optional[float] = None
     date: str
     activity: Optional[str] = None
     timezone: Optional[str] = None
     part_of_day: Optional[str] = None
     already_passed: Optional[bool] = None
+    # Support frontend sending location as nested object
+    location: Optional[dict] = None
+    troe_location: Optional[dict] = None
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls._populate_latlon
+
+    @classmethod
+    def _populate_latlon(cls, values):
+        # pydantic passes either a dict or Model; ensure dict
+        if isinstance(values, cls):
+            return values
+        # if lat/lon missing, try to extract from location or troe_location
+        if (values.get('lat') is None or values.get('lon') is None):
+            loc = values.get('location') or values.get('troe_location')
+            if isinstance(loc, dict):
+                if values.get('lat') is None and 'lat' in loc:
+                    values['lat'] = loc.get('lat')
+                if values.get('lon') is None and 'lon' in loc:
+                    values['lon'] = loc.get('lon')
+
+        # After attempting population, ensure lat/lon present
+        if values.get('lat') is None or values.get('lon') is None:
+            raise ValueError('lat and lon are required either top-level or inside location/troe_location')
+
+        return values
 
 
 async def _predict_core(
@@ -498,6 +525,16 @@ async def predict_weather_post(payload: PredictRequest, current_user: dict = Dep
     using the provided IANA timezone (if any) and will use that authoritative value
     when generating the AI insight.
     """
+    # Ensure we have lat/lon available (frontend sometimes sends nested location)
+    if payload.lat is None or payload.lon is None:
+        loc = payload.location or payload.troe_location
+        if isinstance(loc, dict):
+            payload.lat = payload.lat or loc.get('lat')
+            payload.lon = payload.lon or loc.get('lon')
+
+    if payload.lat is None or payload.lon is None:
+        raise HTTPException(status_code=422, detail="lat and lon are required")
+
     # Compute authoritative already_passed using server timezone data
     tz_name = payload.timezone or 'UTC'
     server_already_passed = None

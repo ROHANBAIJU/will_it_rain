@@ -283,7 +283,10 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
     'timezone': _selectedTimezone,
     'part_of_day': _selectedPartOfDay,
     'already_passed': alreadyPassed,
+    // include both nested location and explicit top-level lat/lon for compatibility
     'location': {'lat': _mapCenter.latitude, 'lon': _mapCenter.longitude},
+    'lat': _mapCenter.latitude,
+    'lon': _mapCenter.longitude,
     if (activity.isNotEmpty) 'activity': activity,
   };
 
@@ -297,6 +300,13 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
       if (data == null) {
         throw Exception('Empty response from server');
       }
+
+      // If server returns authoritative already_passed, show it in the console for debugging
+      try {
+        if (data is Map && data.containsKey('server_already_passed')) {
+          print('Server authoritative already_passed: ${data['server_already_passed']}');
+        }
+      } catch (_) {}
 
       setState(() {
         _weatherData = data;

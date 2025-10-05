@@ -480,10 +480,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                       children: [
                                         Row(
                                           children: [
-                                            Expanded(
+                                            Flexible(
                                               child: Text(s.name,
                                                   style: const TextStyle(
-                                                      color: Colors.white)),
+                                                      color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600)),
                                             ),
                                             _badge(s.type,
                                                 bg: const Color(0x3348BB78),
@@ -915,7 +915,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(width: 12),
-        Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFF7C6BAD)),
+        Switch(value: value, onChanged: onChanged, activeThumbColor: const Color(0xFF7C6BAD)),
       ],
     );
   }

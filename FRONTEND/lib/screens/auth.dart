@@ -866,8 +866,9 @@ class _AuthPageState extends State<AuthPage> {
       try {
         final json = jsonDecode(res.body);
         if (json is Map<String, dynamic>) {
-          if (json.containsKey('detail')) message = json['detail'].toString();
-          else if (json.containsKey('error')) message = json['error'].toString();
+          if (json.containsKey('detail')) {
+            message = json['detail'].toString();
+          } else if (json.containsKey('error')) message = json['error'].toString();
           else if (json.containsKey('message')) message = json['message'].toString();
           else message = json.toString();
         } else {
@@ -915,8 +916,9 @@ class _AuthPageState extends State<AuthPage> {
       try {
         final json = jsonDecode(res.body);
         if (json is Map<String, dynamic>) {
-          if (json.containsKey('detail')) message = json['detail'].toString();
-          else if (json.containsKey('error')) message = json['error'].toString();
+          if (json.containsKey('detail')) {
+            message = json['detail'].toString();
+          } else if (json.containsKey('error')) message = json['error'].toString();
           else if (json.containsKey('message')) message = json['message'].toString();
           else message = json.toString();
         } else {

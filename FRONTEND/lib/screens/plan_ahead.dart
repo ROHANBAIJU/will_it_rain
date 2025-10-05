@@ -8,6 +8,8 @@ import 'dart:async';
 import '../widgets/weather_visualization.dart';
 
 class PlanAheadWidget extends StatefulWidget {
+  const PlanAheadWidget({super.key});
+
   @override
   _PlanAheadWidgetState createState() => _PlanAheadWidgetState();
 }
@@ -181,7 +183,7 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
 
       // Log the raw backend JSON to the frontend terminal (and browser console)
       try {
-        print('Backend /predict response: ${data}');
+        print('Backend /predict response: $data');
       } catch (_) {}
 
       if (data == null) {
@@ -651,7 +653,7 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                 }),
                 const SizedBox(height: 12),
                 // AI Insight card (if present)
-                if ((_weatherData!['ai_insight'] ?? null) != null) ...[
+                if ((_weatherData!['ai_insight']) != null) ...[
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),

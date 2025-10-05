@@ -581,7 +581,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
+        Flexible(fit: FlexFit.loose,
           child: Text(
             title,
             style: const TextStyle(color: Color(0xFF6B6B6B)),
@@ -626,8 +626,9 @@ class _HeroWeather extends StatelessWidget {
     String fmtNum(dynamic v) {
       if (v == null) return '--';
       double? asNum;
-      if (v is double) asNum = v;
-      else if (v is int) asNum = v.toDouble();
+      if (v is double) {
+        asNum = v;
+      } else if (v is int) asNum = v.toDouble();
       else if (v is String) asNum = double.tryParse(v);
 
       // Treat sentinel/unrealistic numbers (like -999) as missing
@@ -707,8 +708,9 @@ class _HeroWeather extends StatelessWidget {
         // If the key name contains 'mps' or 'm/s' treat the number as meters-per-second and convert to km/h
         final raw = v;
         double? asNum;
-        if (raw is double) asNum = raw;
-        else if (raw is int) asNum = raw.toDouble();
+        if (raw is double) {
+          asNum = raw;
+        } else if (raw is int) asNum = raw.toDouble();
         else if (raw is String) asNum = double.tryParse(raw);
 
         if (asNum != null) {
@@ -736,6 +738,7 @@ class _HeroWeather extends StatelessWidget {
       }
     }
     return Container(
+      width: double.infinity,
       // Clean white card with purple gradient accent
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -783,28 +786,30 @@ class _HeroWeather extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    // Ellipsize long locations and show full name on hover/tap via Tooltip
-                    Flexible(
-                      child: Tooltip(
-                        message: location ?? 'Current location',
-                        child: Text(
-                          location ?? 'Current location',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          // Ellipsize long locations and show full name on hover/tap via Tooltip
+                          Expanded(
+                            child: Tooltip(
+                              message: location ?? 'Current location',
+                              child: Text(
+                                location ?? 'Current location',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -839,7 +844,7 @@ class _HeroWeather extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Main Temp
-                        Expanded(
+                        Flexible(fit: FlexFit.loose,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -847,7 +852,7 @@ class _HeroWeather extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '${tempC}°',
+                                    '$tempC°',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: isSmallScreen ? 52 : 72,
@@ -885,13 +890,13 @@ class _HeroWeather extends StatelessWidget {
                               const SizedBox(height: 6),
                               _MiniStat(
                                 icon: Icons.thermostat,
-                                label: 'Feels like ${tempC}°',
+                                label: 'Feels like $tempC°',
                                 color: Colors.white70,
                               ),
                               const SizedBox(height: 4),
                               _MiniStat(
                                 icon: Icons.opacity,
-                                label: '${humidity}% humidity',
+                                label: '$humidity% humidity',
                                 color: Colors.white70,
                               ),
                             ],
@@ -952,7 +957,7 @@ class _HeroWeather extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${wind == '--' ? '--' : wind + ' km/h'}',
+                                  wind == '--' ? '--' : '$wind km/h',
                                   style: const TextStyle(color: Color(0xFF6B6B6B)),
                                 ),
                               ],
@@ -977,8 +982,9 @@ class _HeroWeather extends StatelessWidget {
                     String fmtQuick(dynamic v) {
                       if (v == null) return '--';
                       double? n;
-                      if (v is double) n = v;
-                      else if (v is int) n = v.toDouble();
+                      if (v is double) {
+                        n = v;
+                      } else if (v is int) n = v.toDouble();
                       else if (v is String) n = double.tryParse(v);
                       if (n == null) return '--';
                       if (n <= -500) return '--';
@@ -1019,7 +1025,7 @@ class _HeroWeather extends StatelessWidget {
                     }
 
                     // Humidity (we already computed humidity earlier)
-                    final humidityQuick = humidity != '--' ? humidity + '%' : '--';
+                    final humidityQuick = humidity != '--' ? '$humidity%' : '--';
 
                     // Pressure candidates
                     final pressureCandidates = [() => data?['pressure'], () => data?['pressure_hpa'], () => data?['pressure_mbar'], () => data?['sea_level_pressure']];
@@ -1117,7 +1123,7 @@ class _HeroWeather extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Expanded(
+                      const Flexible(fit: FlexFit.loose,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1165,6 +1171,7 @@ class _TodayCard extends StatelessWidget {
     ];
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1238,6 +1245,7 @@ class _TomorrowCard extends StatelessWidget {
     ];
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1260,7 +1268,7 @@ class _TomorrowCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
+              Flexible(fit: FlexFit.loose,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -1428,6 +1436,7 @@ class _TenDayCard extends StatelessWidget {
     ];
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

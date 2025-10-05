@@ -61,18 +61,103 @@ class DataVerificationAgent:
         
         try:
             prompt = self._build_verification_prompt(statistics, location, date)
-            
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
-                    'temperature': 0.3,  # Low temperature for factual verification
-                    'top_p': 0.8,
-                    'top_k': 20,
-                    'max_output_tokens': 500  # Shorter response for verification
+            response = None
+            try:
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config={
+                        'temperature': 0.3,  # Low temperature for factual verification
+                        'top_p': 0.8,
+                        'top_k': 20,
+                        'max_output_tokens': 500  # Shorter response for verification
+                    }
+                )
+            except Exception as e:
+                # If generation itself fails, surface a clear message and fallback
+                print(f"⚠️ Gemini generation error: {e}")
+                return {
+                    "status": "unverified",
+                    "is_valid": True,
+                    "confidence": "low",
+                    "anomalies": [],
+                    "validation_notes": f"Generation failed: {str(e)}",
+                    "verified_by": 'gemini-2.0-flash-thinking-exp'
                 }
-            )
-            
-            verification_result = self._parse_verification_response(response.text)
+
+            # Robust text extraction with many fallbacks; each accessor wrapped to avoid quick-accessor errors
+            resp_text = None
+
+            # 1) Try response.text safely
+            try:
+                resp_text = getattr(response, 'text', None)
+            except Exception as e:
+                print(f"⚠️ response.text accessor raised: {e}")
+                resp_text = None
+
+            # 2) Try candidates / content structures
+            if not resp_text:
+                try:
+                    candidates = getattr(response, 'candidates', None)
+                    if candidates and len(candidates) > 0:
+                        first = candidates[0]
+                        try:
+                            resp_text = getattr(first, 'text', None) or getattr(first, 'content', None)
+                        except Exception:
+                            # Some candidate shapes may be dict-like
+                            try:
+                                resp_text = first.get('text') or first.get('content')
+                            except Exception:
+                                resp_text = None
+                        if isinstance(resp_text, (list, tuple)) and len(resp_text) > 0:
+                            part = resp_text[0]
+                            try:
+                                resp_text = getattr(part, 'text', None) or str(part)
+                            except Exception:
+                                resp_text = str(part)
+                        if resp_text is not None and not isinstance(resp_text, str):
+                            resp_text = str(resp_text)
+                except Exception as e:
+                    print(f"⚠️ candidates extraction failed: {e}")
+                    resp_text = None
+
+            # 3) If response is iterable (streaming), accumulate chunk.text
+            if not resp_text:
+                try:
+                    if hasattr(response, '__iter__') and not isinstance(response, (str, bytes)):
+                        parts = []
+                        for chunk in response:
+                            try:
+                                chunk_text = getattr(chunk, 'text', None) or getattr(chunk, 'content', None)
+                                if chunk_text is None and isinstance(chunk, (str, bytes)):
+                                    chunk_text = str(chunk)
+                                if chunk_text:
+                                    parts.append(chunk_text)
+                            except Exception:
+                                # best-effort: stringify the chunk
+                                try:
+                                    parts.append(str(chunk))
+                                except Exception:
+                                    continue
+                        if parts:
+                            resp_text = ''.join(parts)
+                except Exception as e:
+                    print(f"⚠️ streaming extraction failed: {e}")
+
+            # 4) Final fallback: stringify the response
+            if not resp_text:
+                try:
+                    resp_text = str(response)
+                except Exception:
+                    resp_text = ''
+
+            # Debug: log a snippet of the raw resp_text to help diagnose parsing issues
+            try:
+                print(f"🔎 verification resp_text (snippet): {resp_text[:800]}")
+            except Exception:
+                pass
+
+            # Parse verification response (may return structured dict or fallback map)
+            verification_result = self._parse_verification_response(resp_text)
             
             print(f"✅ Data verification complete: {verification_result['status']}")
             return verification_result
@@ -122,7 +207,7 @@ class DataVerificationAgent:
    - Precipitation: 0 to 500 mm/day
    - Probability: 0% to 100%
 
-2. Are the values reasonable for this location and date?
+2. Are the values reasonable for this location and date and from your weather analysis is the conditions accurate?
    - Consider latitude/longitude climate zone
    - Consider seasonal patterns
    - Consider geographical context
@@ -162,8 +247,48 @@ class DataVerificationAgent:
                 cleaned = cleaned[:-3]
             cleaned = cleaned.strip()
             
-            # Parse JSON
-            verification = json.loads(cleaned)
+            # Attempt to extract a JSON object from the cleaned text if the model returned extra prose
+            verification = None
+            try:
+                # Fast path: try parse whole cleaned string
+                verification = json.loads(cleaned)
+            except Exception:
+                # Try to locate a JSON substring within the response_text
+                import re
+                json_match = re.search(r"(\{[\s\S]*\})", cleaned)
+                if json_match:
+                    candidate = json_match.group(1)
+                    try:
+                        verification = json.loads(candidate)
+                    except Exception:
+                        verification = None
+
+            if verification is None:
+                # If JSON couldn't be parsed, fallback to heuristic extraction from plain text
+                lower = cleaned.lower()
+                is_valid = 'valid' in lower and 'invalid' not in lower
+                # confidence heuristic
+                if 'high confidence' in lower or 'high confidence' in cleaned:
+                    confidence = 'high'
+                elif 'low confidence' in lower or 'low confidence' in cleaned:
+                    confidence = 'low'
+                else:
+                    confidence = 'medium'
+
+                # extract anomalies lines starting with '-' or 'anomal'
+                anomalies = []
+                for line in cleaned.splitlines():
+                    l = line.strip()
+                    if l.startswith('-') or 'anomal' in l.lower():
+                        anomalies.append(l.lstrip('- ').strip())
+
+                verification = {
+                    'is_valid': is_valid,
+                    'confidence': confidence,
+                    'anomalies': anomalies,
+                    'validation_notes': cleaned[:400],
+                    'recommendations': ''
+                }
             
             # Add metadata
             verification['status'] = 'verified' if verification.get('is_valid', True) else 'invalid'

@@ -29,7 +29,14 @@ class ApiClient {
   /// GET and decode JSON, throwing an exception for non-200 responses.
   Future<dynamic> getJson(String path, {Map<String, String>? extraHeaders}) async {
     final res = await get(path, extraHeaders: extraHeaders);
-    return _handleResponse(res);
+    final parsed = _handleResponse(res);
+    try {
+      // Log the JSON response for visibility in the frontend terminal / browser console
+      print('API GET $path response: ${jsonEncode(parsed)}');
+    } catch (_) {
+      print('API GET $path response: (unserializable) $parsed');
+    }
+    return parsed;
   }
 
   Future<http.Response> post(String path, {Object? body, Map<String, String>? extraHeaders}) async {
@@ -42,7 +49,13 @@ class ApiClient {
   /// POST a JSON body and decode JSON response, throwing on non-200.
   Future<dynamic> postJson(String path, {Object? body, Map<String, String>? extraHeaders}) async {
     final res = await post(path, body: body, extraHeaders: extraHeaders);
-    return _handleResponse(res);
+    final parsed = _handleResponse(res);
+    try {
+      print('API POST $path response: ${jsonEncode(parsed)}');
+    } catch (_) {
+      print('API POST $path response: (unserializable) $parsed');
+    }
+    return parsed;
   }
 
   dynamic _handleResponse(http.Response res) {

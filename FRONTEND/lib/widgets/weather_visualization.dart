@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+// ...existing code...
 
 /// Weather Data Visualization Widget
 /// Shows animated charts for weather statistics
@@ -25,7 +25,7 @@ class WeatherDataVisualization extends StatelessWidget {
   }
 
   Widget _buildRainProbabilityBar() {
-    final rainProb = (statistics['precipitation_probability_percent'] ?? 0.0).toDouble();
+  final rainProb = (statistics['precipitation_probability_percent'] ?? statistics['precipitation_probability'] ?? 0.0).toDouble();
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -90,9 +90,9 @@ class WeatherDataVisualization extends StatelessWidget {
   }
 
   Widget _buildTemperatureRange() {
-    final avgTemp = (statistics['average_temperature_celsius'] ?? 20.0).toDouble();
-    final minTemp = (statistics['min_temperature_celsius'] ?? 15.0).toDouble();
-    final maxTemp = (statistics['max_temperature_celsius'] ?? 25.0).toDouble();
+  final avgTemp = (statistics['average_temperature_celsius'] ?? statistics['avg_temp_celsius'] ?? 20.0).toDouble();
+  final minTemp = (statistics['min_temperature_celsius'] ?? statistics['min_temp_celsius'] ?? 15.0).toDouble();
+  final maxTemp = (statistics['max_temperature_celsius'] ?? statistics['max_temp_celsius'] ?? 25.0).toDouble();
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -223,21 +223,21 @@ class WeatherDataVisualization extends StatelessWidget {
           _buildMetricRow(
             Icons.water,
             'Humidity',
-            '${(statistics['average_humidity_percent'] ?? 0.0).toStringAsFixed(1)}%',
+            '${(statistics['average_humidity_percent'] ?? statistics['avg_humidity_percent'] ?? 0.0).toStringAsFixed(1)}%',
             const Color(0xFF3498DB),
           ),
           const Divider(height: 24),
           _buildMetricRow(
             Icons.air,
             'Wind Speed',
-            '${(statistics['average_wind_speed_ms'] ?? 0.0).toStringAsFixed(1)} m/s',
+            '${(statistics['average_wind_speed_mps'] ?? statistics['average_wind_speed_ms'] ?? statistics['avg_wind_speed'] ?? 0.0).toStringAsFixed(1)} m/s',
             const Color(0xFF95A5A6),
           ),
           const Divider(height: 24),
           _buildMetricRow(
             Icons.compress,
             'Pressure',
-            '${(statistics['average_pressure_kpa'] ?? 0.0).toStringAsFixed(1)} kPa',
+            '${(statistics['average_pressure_kpa'] ?? statistics['avg_pressure_kpa'] ?? statistics['average_pressure_hpa'] ?? 0.0).toStringAsFixed(1)} kPa',
             const Color(0xFF9B59B6),
           ),
         ],

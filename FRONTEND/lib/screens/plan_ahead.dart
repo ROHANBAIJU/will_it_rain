@@ -15,6 +15,8 @@ class PlanAheadWidget extends StatefulWidget {
 class _PlanAheadWidgetState extends State<PlanAheadWidget> {
   final TextEditingController _activityController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _latController = TextEditingController();
+  final TextEditingController _lonController = TextEditingController();
   final MapController _mapController = MapController();
   Timer? _debounce;
   List<PlaceSuggestion> _suggestions = [];
@@ -31,6 +33,54 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
   void initState() {
     super.initState();
     _activityController.text = 'picnic'; // Default activity
+    // Initialize lat/lon inputs from the default map center
+    _latController.text = _mapCenter.latitude.toStringAsFixed(6);
+    _lonController.text = _mapCenter.longitude.toStringAsFixed(6);
+  }
+
+  void _moveToLatLonFromFields() {
+    String latText;
+    String lonText;
+    try {
+      latText = _latController.text.trim();
+      lonText = _lonController.text.trim();
+    } catch (e) {
+      // Controller may be temporarily null during hot-reload; don't crash
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lat/Lon input not available')));
+      return;
+    }
+    if (latText.isEmpty || lonText.isEmpty) return;
+
+    final lat = double.tryParse(latText);
+    final lon = double.tryParse(lonText);
+    if (lat == null || lon == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid latitude or longitude')));
+      return;
+    }
+
+    final point = LatLng(lat, lon);
+    setState(() {
+      _mapCenter = point;
+      _selectedMarker = Marker(
+        point: point,
+        builder: (_) => const Icon(
+          Icons.location_on,
+          color: Color(0xFF7C6BAD),
+          size: 40,
+        ),
+      );
+    });
+    _mapController.move(point, 13.0);
+  }
+
+  @override
+  void dispose() {
+    _activityController.dispose();
+    _searchController.dispose();
+    _latController.dispose();
+    _lonController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
@@ -128,7 +178,12 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
       final path = '/predict?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}&date=$dateStr${activity.isNotEmpty ? '&activity=$activity' : ''}';
 
       final data = await ApiClient.instance.getJson(path);
-      
+
+      // Log the raw backend JSON to the frontend terminal (and browser console)
+      try {
+        print('Backend /predict response: ${data}');
+      } catch (_) {}
+
       if (data == null) {
         throw Exception('Empty response from server');
       }
@@ -310,6 +365,59 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                     ),
                     const SizedBox(height: 8),
                     // Search bar for Plan Ahead location
+                    // Latitude / Longitude quick inputs
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _latController,
+                            keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
+                            decoration: InputDecoration(
+                              hintText: 'Lat',
+                              prefixIcon: const Icon(Icons.my_location, color: Color(0xFF7C6BAD)),
+                              filled: true,
+                              fillColor: const Color(0xFFF9F9F9),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                              ),
+                            ),
+                            onSubmitted: (_) => _moveToLatLonFromFields(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _lonController,
+                            keyboardType: TextInputType.numberWithOptions(signed: true, decimal: true),
+                            decoration: InputDecoration(
+                              hintText: 'Lon',
+                              prefixIcon: const Icon(Icons.location_on, color: Color(0xFF7C6BAD)),
+                              filled: true,
+                              fillColor: const Color(0xFFF9F9F9),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                              ),
+                            ),
+                            onSubmitted: (_) => _moveToLatLonFromFields(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _moveToLatLonFromFields,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7C6BAD),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 14.0),
+                            child: Text('Go'),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
@@ -365,6 +473,11 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                                   );
                                   _suggestions = [];
                                   _searchController.text = s.displayName;
+                                      // Update lat/lon inputs when user picks a suggestion (guard in case controller is not available)
+                                      try {
+                                        _latController.text = _mapCenter.latitude.toStringAsFixed(6);
+                                        _lonController.text = _mapCenter.longitude.toStringAsFixed(6);
+                                      } catch (_) {}
                                 });
                                 _mapController.move(_mapCenter, 13.0);
                               },
@@ -397,6 +510,11 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                                   size: 40,
                                 ),
                               );
+                              // Fill lat/lon inputs when user taps the map (guard controllers)
+                              try {
+                                _latController.text = _mapCenter.latitude.toStringAsFixed(6);
+                                _lonController.text = _mapCenter.longitude.toStringAsFixed(6);
+                              } catch (_) {}
                             });
                           },
                         ),
@@ -522,7 +640,45 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
               // Weather Data Visualization
               if (_weatherData != null) ...[
                 const SizedBox(height: 8),
-                WeatherDataVisualization(statistics: _weatherData!),
+                // _weatherData is the full response; pass the nested `statistics` dictionary to the widget
+                WeatherDataVisualization(statistics: _weatherData!['statistics'] ?? _weatherData!),
+                const SizedBox(height: 12),
+                // AI Insight card (if present)
+                if ((_weatherData!['ai_insight'] ?? null) != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AI Insight',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          (_weatherData!['ai_insight'] is String)
+                              ? _weatherData!['ai_insight']
+                              : (_weatherData!['ai_insight'] is Map
+                                  ? (_weatherData!['ai_insight']['reasoning'] ?? '')
+                                  : ''),
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

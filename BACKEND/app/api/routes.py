@@ -182,10 +182,10 @@ async def predict_weather(
                     
                     if verification_result.get('anomalies'):
                         response["verification"]["anomalies"] = verification_result['anomalies']
-                    
+
                     if ai_insight:
                         response["ai_insight"] = ai_insight
-                    
+
                     return response
                     
                 except Exception as e:
@@ -196,7 +196,7 @@ async def predict_weather(
                         cached_data['metadata']['total_years']
                     )
                     
-                    return {
+                    resp = {
                         "query": {"lat": lat, "lon": lon, "date": date},
                         "statistics": cached_data['statistics'],
                         "confidence_score": round(cached_data['confidence_score'], 2),
@@ -204,6 +204,7 @@ async def predict_weather(
                         "missing_data_alert": missing_data_alert,
                         "warning": "Could not update with latest data. Returning cached version."
                     }
+                    return resp
             
             else:
                 # ============================================================
@@ -243,7 +244,7 @@ async def predict_weather(
                 
                 if ai_insight:
                     response["ai_insight"] = ai_insight
-                
+
                 return response
         
         # ============================================================
@@ -348,7 +349,10 @@ async def predict_weather(
         
         if ai_insight:
             response["ai_insight"] = ai_insight
-        
+
+        if already_passed is not None:
+            response["server_already_passed"] = bool(already_passed)
+
         return response
 
     except ValueError as e:
@@ -432,6 +436,9 @@ async def _predict_core(
             location={"lat": lat, "lon": lon},
             date=date
         )
+
+        # Note: server_already_passed will be attached to responses after
+        # those response dicts are constructed further below.
 
         # Check if verification flagged any issues
         if not verification_result.get('is_valid', True):

@@ -85,11 +85,20 @@ class ReasoningAgent:
         if part_of_day:
             part_of_day_context = f"\n\n**Part of day**: {part_of_day.replace('_', ' ').title()}"
 
-        # Tense guidance: prefer past tense if already_passed is True
+        # Tense guidance: make instruction explicit and provide examples so the model reliably
+        # uses past tense when the event already occurred.
         if already_passed:
-            tense_instruction = "If the requested time has already passed, describe outcomes in the past tense; otherwise use present/future tense."
+            tense_instruction = (
+                "ALREADY_PASSED: True. The requested date/time has already occurred. "
+                "Begin the response by clearly stating that the event has passed (for example: 'Update: The requested time has passed. Observed conditions:'). "
+                "Describe observed outcomes in the past tense (use verbs like 'was', 'rained', 'had', 'experienced'). "
+                "Do NOT phrase observations as future predictions. Keep the message concise and factual."
+            )
         else:
-            tense_instruction = "Use present/future tense when describing expected conditions."
+            tense_instruction = (
+                "ALREADY_PASSED: False. The requested date/time is upcoming or ongoing. "
+                "Use present or future tense when describing expected conditions (for example: 'there will be showers', 'expect pleasant temperatures')."
+            )
         
         prompt = f"""You are AI Nimbus, a friendly and knowledgeable weather assistant helping someone plan their day.
 
@@ -99,6 +108,8 @@ class ReasoningAgent:
         {activity_context}{part_of_day_context}
 
         {tense_instruction}
+
+        NOTE: If ALREADY_PASSED is True, the first sentence should make that explicit and use past-tense phrasing.
 
         **Weather Statistics:**
         - Precipitation Probability: {rain_prob:.1f}%

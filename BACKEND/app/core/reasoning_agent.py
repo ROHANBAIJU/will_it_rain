@@ -126,7 +126,7 @@ class ReasoningAgent:
         2. Temperature description (e.g., "pleasant weather", "hot day", "cool evening")
         3. Practical recommendation for the day (clothing, activities, precautions)
         4. {f"Specific advice for {activity}" if activity else "General activity suggestions"}
-        5. Mention the place name (if you can determine it from coordinates), otherwise say "your area"
+        5. Mention the place name (determine it from coordinates)
         Keep it friendly, concise, and actionable. Speak directly to the user (use "you" and "your").
         """
 

@@ -158,8 +158,12 @@ class DataVerificationAgent:
 
             # Parse verification response (may return structured dict or fallback map)
             verification_result = self._parse_verification_response(resp_text)
-            
-            print(f"✅ Data verification complete: {verification_result['status']}")
+
+            # Debug: print the parsed verification result so logs show final structure
+            try:
+                print(f"✅ Data verification complete: {verification_result}")
+            except Exception:
+                print("✅ Data verification complete (could not print result)")
             return verification_result
             
         except Exception as e:
@@ -287,13 +291,20 @@ class DataVerificationAgent:
                     'confidence': confidence,
                     'anomalies': anomalies,
                     'validation_notes': cleaned[:400],
-                    'recommendations': ''
+                    'recommendations': '',
+                    'source': 'heuristic'
                 }
             
-            # Add metadata
-            verification['status'] = 'verified' if verification.get('is_valid', True) else 'invalid'
+            # If verification came from heuristic fallback, mark it as 'unverified' (do not mark invalid)
+            if verification.get('source') == 'heuristic':
+                verification['status'] = 'unverified'
+                verification['is_valid'] = True
+                verification.setdefault('confidence', 'medium')
+            else:
+                verification['status'] = 'verified' if verification.get('is_valid', True) else 'invalid'
+
             verification['verified_by'] = 'gemini-2.0-flash-thinking-exp'
-            
+
             return verification
             
         except json.JSONDecodeError as e:

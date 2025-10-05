@@ -235,9 +235,9 @@ class WeatherDataVisualization extends StatelessWidget {
           ),
           const Divider(height: 24),
           _buildMetricRow(
-            Icons.compress,
-            'Pressure',
-            '${(statistics['average_pressure_kpa'] ?? statistics['avg_pressure_kpa'] ?? statistics['average_pressure_hpa'] ?? 0.0).toStringAsFixed(1)} kPa',
+            Icons.check_circle_outline,
+            'Confidence',
+            '${(((statistics['confidence_score'] ?? statistics['confidence'] ?? 0.0) as num) * 100.0).toStringAsFixed(1)}%',
             const Color(0xFF9B59B6),
           ),
         ],

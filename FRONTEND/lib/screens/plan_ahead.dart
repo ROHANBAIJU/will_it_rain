@@ -641,7 +641,14 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
               if (_weatherData != null) ...[
                 const SizedBox(height: 8),
                 // _weatherData is the full response; pass the nested `statistics` dictionary to the widget
-                WeatherDataVisualization(statistics: _weatherData!['statistics'] ?? _weatherData!),
+                // Ensure statistics includes top-level confidence_score if present
+                Builder(builder: (context) {
+                  final stats = Map<String, dynamic>.from(_weatherData!['statistics'] ?? _weatherData!);
+                  if (_weatherData!.containsKey('confidence_score')) {
+                    stats['confidence_score'] = _weatherData!['confidence_score'];
+                  }
+                  return WeatherDataVisualization(statistics: stats);
+                }),
                 const SizedBox(height: 12),
                 // AI Insight card (if present)
                 if ((_weatherData!['ai_insight'] ?? null) != null) ...[

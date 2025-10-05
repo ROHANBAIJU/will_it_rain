@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'dart:io' show File;
 // ...existing code...
 
 /// Weather Data Visualization Widget
@@ -15,6 +17,8 @@ class WeatherDataVisualization extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        _buildAnimatedWeatherCard(),
+        const SizedBox(height: 16),
         _buildRainProbabilityBar(),
         const SizedBox(height: 20),
         _buildTemperatureRange(),
@@ -22,6 +26,145 @@ class WeatherDataVisualization extends StatelessWidget {
         _buildWeatherMetrics(),
       ],
     );
+  }
+
+  Widget _buildAnimatedWeatherCard() {
+    final condition = (statistics['condition'] ?? statistics['weather'] ?? '').toString().toLowerCase();
+    String assetPath;
+    if (condition.contains('rain')) {
+      assetPath = 'assets/lottie/rainy.json';
+    } else if (condition.contains('cloud')) {
+      assetPath = 'assets/lottie/cloudy.json';
+    } else {
+      assetPath = 'assets/lottie/sunny.json';
+    }
+
+    // Beautiful container with gradient and soft shadow
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_getCardStartColor(condition), _getCardEndColor(condition)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Lottie animation with fallback to Icon
+          Container(
+            width: 120,
+            height: 120,
+            padding: const EdgeInsets.all(8),
+            child: _buildLottieOrFallback(assetPath, condition),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getHeadlineForCondition(condition),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _getSubheadingForCondition(condition),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _smallStatItem(Icons.water_drop, '${(statistics['precipitation_probability_percent'] ?? statistics['precipitation_probability'] ?? 0.0).toStringAsFixed(0)}%', Colors.white),
+                    const SizedBox(width: 12),
+                    _smallStatItem(Icons.thermostat, '${(statistics['average_temperature_celsius'] ?? statistics['avg_temp_celsius'] ?? 0.0).toStringAsFixed(0)}°C', Colors.white),
+                    const SizedBox(width: 12),
+                    _smallStatItem(Icons.wind_power, '${(statistics['average_wind_speed_mps'] ?? statistics['avg_wind_speed'] ?? 0.0).toStringAsFixed(1)} m/s', Colors.white),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLottieOrFallback(String assetPath, String condition) {
+    try {
+      // If asset file exists in bundled assets, Lottie.asset will load it; we still guard for runtime errors
+      return Lottie.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        repeat: true,
+        width: 120,
+        height: 120,
+      );
+    } catch (e) {
+      // Graceful fallback to static icon
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(
+            condition.contains('rain') ? Icons.umbrella : (condition.contains('cloud') ? Icons.cloud : Icons.wb_sunny),
+            color: Colors.white,
+            size: 56,
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _smallStatItem(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  String _getHeadlineForCondition(String condition) {
+    if (condition.contains('rain')) return 'Expect Rain';
+    if (condition.contains('cloud')) return 'Cloudy Skies';
+    return 'Sunny & Clear';
+  }
+
+  String _getSubheadingForCondition(String condition) {
+    if (condition.contains('rain')) return 'Carry an umbrella and consider indoor options.';
+    if (condition.contains('cloud')) return 'Overcast to partly cloudy — keep an eye on updates.';
+    return 'A bright day — great for outdoor plans.';
+  }
+
+  Color _getCardStartColor(String condition) {
+    if (condition.contains('rain')) return const Color(0xFF3A7BD5);
+    if (condition.contains('cloud')) return const Color(0xFF6D6F76);
+    return const Color(0xFFFFD86B);
+  }
+
+  Color _getCardEndColor(String condition) {
+    if (condition.contains('rain')) return const Color(0xFF00C6FF);
+    if (condition.contains('cloud')) return const Color(0xFFB0BEC5);
+    return const Color(0xFFFFA726);
   }
 
   Widget _buildRainProbabilityBar() {

@@ -54,6 +54,121 @@ async def get_current_weather(
         raise HTTPException(status_code=500, detail=f"Failed to fetch current weather: {str(e)}")
 
 
+@router.get("/weather/today", tags=["Weather"])
+async def get_weather_today(
+    lat: float = Query(..., description="Latitude of the location"),
+    lon: float = Query(..., description="Longitude of the location"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Today summary: returns current conditions (live) plus hourly slots from current IST time to 23:00
+    and a short prediction summary (statistics + ai_insight) for today.
+    """
+    try:
+        current = CurrentWeatherService.get_current_weather(lat, lon)
+
+        # Build hourly slots in Asia/Kolkata local time
+        try:
+            tz = ZoneInfo('Asia/Kolkata')
+        except Exception:
+            tz = ZoneInfo('UTC')
+
+        now = datetime.now(tz)
+        hours = []
+        # First, try to get hourly from Open-Meteo for the same date and timezone
+        hourly_data = CurrentWeatherService.get_hourly_forecast(lat, lon, now.date().isoformat(), timezone='Asia/Kolkata')
+        om_hours = hourly_data.get('hourly', [])
+
+        for h in range(now.hour, 24):
+            label = 'Now' if h == now.hour else f"{(h-1)%12+1} {'AM' if h < 12 else 'PM'}"
+            ts = datetime(now.year, now.month, now.day, h, 0, tzinfo=tz).isoformat()
+
+            # Find matching hour in Open-Meteo (by ISO hour prefix)
+            matched = None
+            for oh in om_hours:
+                if oh.get('timestamp', '')[:13] == ts[:13]:
+                    matched = oh
+                    break
+
+            if matched:
+                hours.append({
+                    'time_label': label,
+                    'timestamp': matched.get('timestamp'),
+                    'temperature_c': matched.get('temperature_c'),
+                    'condition': current.get('condition'),
+                    'precipitation': matched.get('precipitation'),
+                    'wind_speed': matched.get('wind_speed'),
+                    'cloud_cover': matched.get('cloud_cover')
+                })
+            else:
+                # fallback to current snapshot values
+                hours.append({
+                    'time_label': label,
+                    'timestamp': ts,
+                    'temperature_c': current.get('temperature', {}).get('celsius'),
+                    'condition': current.get('condition'),
+                    'precipitation': current.get('precipitation'),
+                    'wind_speed': current.get('wind_speed'),
+                    'cloud_cover': current.get('cloud_cover')
+                })
+
+        # Fetch prediction summary for today (reuse predict core)
+        date_str = now.date().isoformat()
+        prediction = await _predict_core(current_user=current_user, lat=lat, lon=lon, date=date_str)
+
+        return {
+            'current': current,
+            'hourly': hours,
+            'prediction': prediction
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to compose today summary: {e}")
+
+
+@router.get("/weather/tomorrow", tags=["Weather"])
+async def get_weather_tomorrow(
+    lat: float = Query(..., description="Latitude of the location"),
+    lon: float = Query(..., description="Longitude of the location"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Tomorrow: returns the modelled prediction (statistics + ai_insight) for tomorrow's date.
+    """
+    try:
+        tz = ZoneInfo('Asia/Kolkata')
+        tomorrow = (datetime.now(tz) + timedelta(days=1)).date()
+        date_str = tomorrow.isoformat()
+        prediction = await _predict_core(current_user=current_user, lat=lat, lon=lon, date=date_str)
+        return {'date': date_str, 'prediction': prediction}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tomorrow prediction: {e}")
+
+
+@router.get('/weather/10day', tags=["Weather"])
+async def get_weather_10day(
+    lat: float = Query(..., description="Latitude of the location"),
+    lon: float = Query(..., description="Longitude of the location"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Next 10 days: returns a list of prediction summaries for the next 10 calendar days (including today).
+    This may be heavy on first call; responses are cached by the prediction layer.
+    """
+    try:
+        tz = ZoneInfo('Asia/Kolkata')
+        start = datetime.now(tz).date()
+        results = []
+        for d in range(0, 10):
+            date_obj = start + timedelta(days=d)
+            date_str = date_obj.isoformat()
+            pred = await _predict_core(current_user=current_user, lat=lat, lon=lon, date=date_str)
+            results.append({'date': date_str, 'prediction': pred})
+
+        return {'location': {'lat': lat, 'lon': lon}, 'forecasts': results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch 10-day predictions: {e}")
+
+
 @router.get("/predict", tags=["Prediction"])
 async def predict_weather(
     lat: float = Query(..., description="Latitude of the location"),
@@ -349,9 +464,6 @@ async def predict_weather(
         
         if ai_insight:
             response["ai_insight"] = ai_insight
-
-        if already_passed is not None:
-            response["server_already_passed"] = bool(already_passed)
 
         return response
 

@@ -11,6 +11,11 @@ import '../services/api_client.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
+String _shortWeekday(int weekday) {
+  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return names[(weekday - 1) % 7];
+}
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -74,10 +79,24 @@ class _DashboardPageState extends State<DashboardPage> {
 
     // Load initial weather for default center
     _loadCurrentWeather();
+    // Load extended payloads
+    _loadTodayPayload();
+    _loadTomorrowPayload();
+    _load10DayPayload();
   }
 
   bool _loadingCurrentWeather = false;
   Map<String, dynamic>? _currentWeatherData;
+
+  // New: today/tomorrow/ten-day payloads
+  bool _loadingToday = false;
+  Map<String, dynamic>? _todayPayload;
+
+  bool _loadingTomorrow = false;
+  Map<String, dynamic>? _tomorrowPayload;
+
+  bool _loading10Day = false;
+  Map<String, dynamic>? _tenDayPayload;
 
   Future<void> _loadCurrentWeather() async {
     setState(() => _loadingCurrentWeather = true);
@@ -94,6 +113,51 @@ class _DashboardPageState extends State<DashboardPage> {
       // ignore errors but stop loading
       if (!mounted) return;
       setState(() => _loadingCurrentWeather = false);
+    }
+  }
+
+  Future<void> _loadTodayPayload() async {
+    setState(() => _loadingToday = true);
+    try {
+      final data = await ApiClient.instance.getJson('/weather/today?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
+      if (!mounted) return;
+      setState(() {
+        _todayPayload = data;
+        _loadingToday = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingToday = false);
+    }
+  }
+
+  Future<void> _loadTomorrowPayload() async {
+    setState(() => _loadingTomorrow = true);
+    try {
+      final data = await ApiClient.instance.getJson('/weather/tomorrow?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
+      if (!mounted) return;
+      setState(() {
+        _tomorrowPayload = data;
+        _loadingTomorrow = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingTomorrow = false);
+    }
+  }
+
+  Future<void> _load10DayPayload() async {
+    setState(() => _loading10Day = true);
+    try {
+      final data = await ApiClient.instance.getJson('/weather/10day?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
+      if (!mounted) return;
+      setState(() {
+        _tenDayPayload = data;
+        _loading10Day = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading10Day = false);
     }
   }
 
@@ -149,9 +213,9 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 12),
 
           // ===== Tab Content =====
-          if (selected == _DashTab.today) _TodayCard(),
-          if (selected == _DashTab.tomorrow) _TomorrowCard(),
-          if (selected == _DashTab.tenDays) _TenDayCard(),
+          if (selected == _DashTab.today) _TodayCard(payload: _todayPayload, loading: _loadingToday),
+          if (selected == _DashTab.tomorrow) _TomorrowCard(payload: _tomorrowPayload, loading: _loadingTomorrow),
+          if (selected == _DashTab.tenDays) _TenDayCard(payload: _tenDayPayload, loading: _loading10Day),
 
           const SizedBox(height: 12),
 
@@ -991,38 +1055,19 @@ class _HeroWeather extends StatelessWidget {
                       return n.round().toString();
                     }
 
-                    String fmtTime(dynamic v) {
-                      if (v == null) return '--';
-                      try {
-                        if (v is String) {
-                          final hhmm = RegExp(r"^(\d{1,2}:\d{2})");
-                          final m = hhmm.firstMatch(v);
-                          if (m != null) return m.group(1)!;
-                          final dt = DateTime.parse(v).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                        if (v is int) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch(v * 1000).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                        if (v is double) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch((v * 1000).toInt()).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                      } catch (_) {}
-                      return '--';
-                    }
+                    // (removed fmtTime helper - sunrise/time quick stat replaced by cloud cover)
 
-                    // UV index candidates from NASA POWER / other backends
-                    final uvCandidates = [() => data?['uv_index'], () => data?['uv'], () => data?['uv_max'], () => data?['uv_index_max']];
-                    String uv = '--';
-                    for (final c in uvCandidates) {
+                    // Wind speed candidates from various backends
+                    final windCandidates = [() => data?['wind_speed'], () => data?['wind_speed_mps'], () => data?['wind_speed_ms'], () => data?['wind_mps'], () => data?['wind']];
+                    String wind = '--';
+                    for (final c in windCandidates) {
                       final v = c();
                       if (v != null) {
-                        uv = fmtQuick(v);
+                        wind = fmtQuick(v);
                         break;
                       }
                     }
+                    final windQuick = wind == '--' ? '--' : '$wind m/s';
 
                     // Humidity (we already computed humidity earlier)
                     final humidityQuick = humidity != '--' ? '$humidity%' : '--';
@@ -1038,16 +1083,17 @@ class _HeroWeather extends StatelessWidget {
                       }
                     }
 
-                    // Sunrise/time candidates
-                    final sunriseCandidates = [() => data?['sunrise'], () => data?['sunrise_local'], () => data?['astronomy']?['sunrise'], () => data?['sunrise_time']];
-                    String sunrise = '--';
-                    for (final c in sunriseCandidates) {
+                    // Cloud cover candidates
+                    final cloudCandidates = [() => data?['cloud_cover'], () => data?['clouds'], () => data?['cloudiness']];
+                    String cloud = '--';
+                    for (final c in cloudCandidates) {
                       final v = c();
                       if (v != null) {
-                        sunrise = fmtTime(v);
+                        cloud = fmtQuick(v);
                         break;
                       }
                     }
+                    final cloudQuick = cloud == '--' ? '--' : '$cloud%';
 
                     if (isSmallScreen) {
                       return Column(
@@ -1056,7 +1102,7 @@ class _HeroWeather extends StatelessWidget {
                           Row(
                             children: [
                               Flexible(
-                                child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15)),
+                                child: _QuickStat(value: windQuick, label: 'Wind Speed', color: const Color(0xFF3B82F6)),
                               ),
                               const SizedBox(width: 8),
                               Flexible(
@@ -1072,7 +1118,7 @@ class _HeroWeather extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Flexible(
-                                child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA)),
+                                child: _QuickStat(value: cloudQuick, label: 'Cloud Cover', color: const Color(0xFF8B5CF6)),
                               ),
                             ],
                           ),
@@ -1082,13 +1128,13 @@ class _HeroWeather extends StatelessWidget {
 
                     return Row(
                       children: [
-                        Flexible(child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15))),
+                        Flexible(child: _QuickStat(value: windQuick, label: 'Wind Speed', color: const Color(0xFF3B82F6))),
                         const SizedBox(width: 8),
                         Flexible(child: _QuickStat(value: humidityQuick, label: 'Humidity', color: const Color(0xFF06B6D4))),
                         const SizedBox(width: 8),
                         Flexible(child: _QuickStat(value: pressure == '--' ? '--' : pressure, label: 'Pressure (hPa)', color: const Color(0xFF10B981))),
                         const SizedBox(width: 8),
-                        Flexible(child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA))),
+                        Flexible(child: _QuickStat(value: cloudQuick, label: 'Cloud Cover', color: const Color(0xFF8B5CF6))),
                       ],
                     );
                   },
@@ -1157,18 +1203,50 @@ class _HeroWeather extends StatelessWidget {
 // ====== TODAY CARD ======
 
 class _TodayCard extends StatelessWidget {
+  final Map<String, dynamic>? payload;
+  final bool loading;
+  const _TodayCard({this.payload, this.loading = false});
+
   @override
   Widget build(BuildContext context) {
-    final hours = [
-      {'time': 'Now', 'temp': '22°', 'icon': '🌤'},
-      {'time': '11 AM', 'temp': '23°', 'icon': '☀'},
-      {'time': '12 PM', 'temp': '24°', 'icon': '☀'},
-      {'time': '1 PM', 'temp': '25°', 'icon': '☀'},
-      {'time': '2 PM', 'temp': '25°', 'icon': '🌤'},
-      {'time': '3 PM', 'temp': '24°', 'icon': '🌤'},
-      {'time': '4 PM', 'temp': '23°', 'icon': '☁'},
-      {'time': '5 PM', 'temp': '22°', 'icon': '☁'},
-    ];
+    // Build hourly slots from current Asia/Kolkata time to end of day (23:00)
+    DateTime nowUtc = DateTime.now().toUtc();
+    // IST is UTC+5:30
+    final istNow = nowUtc.add(const Duration(hours: 5, minutes: 30));
+    final startHour = istNow.hour;
+    final List<Map<String, String>> hours = [];
+    for (int h = startHour; h <= 23; h++) {
+      String label;
+      if (h == istNow.hour) {
+        label = 'Now';
+      } else {
+        final isPm = h >= 12;
+        final hour12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+        label = isPm ? '$hour12 PM' : '$hour12 AM';
+      }
+      // placeholders for temp and icon; if you have hourly data, replace here
+      hours.add({'time': label, 'temp': '--', 'icon': '⛅'});
+    }
+
+    // If payload contains hourly, map temperatures/icons from payload
+    if (payload != null && payload!['hourly'] != null) {
+      final ph = payload!['hourly'] as List<dynamic>;
+      for (int i = 0; i < ph.length; i++) {
+        final item = ph[i] as Map<String, dynamic>;
+        // Only replace matching labels (assumes today's hours)
+        if (i < hours.length) {
+          final tempVal = item['temperature_c'];
+          hours[i]['temp'] = (tempVal != null) ? '${(tempVal as num).round()}°' : (hours[i]['temp'] ?? '--');
+          // choose simple icon mapping by cloud_cover/precipitation
+          final cc = item['cloud_cover'] ?? 0;
+          final precip = item['precipitation'] ?? 0;
+          if (precip is num && precip > 1) hours[i]['icon'] = '🌧';
+          else if (cc is num && cc > 70) hours[i]['icon'] = '☁';
+          else if (cc is num && cc > 40) hours[i]['icon'] = '⛅';
+          else hours[i]['icon'] = '☀';
+        }
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -1192,36 +1270,47 @@ class _TodayCard extends StatelessWidget {
             style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final h in hours)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: Column(
-                      children: [
-                        Text(
-                          '${h['time']}',
-                          style: const TextStyle(
-                            color: Color(0xFF6B6B6B),
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${h['icon']}',
-                          style: const TextStyle(fontSize: 22),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${h['temp']}',
-                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
+          // New polished horizontal hourly list
+          SizedBox(
+            height: 120,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: hours.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, idx) {
+                final h = hours[idx];
+                final bool isNow = h['time'] == 'Now';
+                return Container(
+                  width: 84,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isNow ? const Color(0xFFFBF7EE) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF1EEF6)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 6)),
+                    ],
                   ),
-              ],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(h['time']!, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isNow ? const Color(0xFFFFF6EA) : const Color(0xFFF7F7FA),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(h['icon']!, style: const TextStyle(fontSize: 20)),
+                      ),
+                      Text(h['temp']!, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -1233,6 +1322,10 @@ class _TodayCard extends StatelessWidget {
 // ====== TOMORROW CARD ======
 
 class _TomorrowCard extends StatelessWidget {
+  final Map<String, dynamic>? payload;
+  final bool loading;
+  const _TomorrowCard({this.payload, this.loading = false});
+
   @override
   Widget build(BuildContext context) {
     final hours = [
@@ -1360,9 +1453,14 @@ class _TomorrowCard extends StatelessWidget {
 // ====== 10-DAY CARD ======
 
 class _TenDayCard extends StatelessWidget {
+  final Map<String, dynamic>? payload;
+  final bool loading;
+  const _TenDayCard({this.payload, this.loading = false});
+
   @override
   Widget build(BuildContext context) {
-    final days = [
+  // If payload has forecasts, map them into days
+  List<Map<String, dynamic>> days = [
       {
         'day': 'Today',
         'high': '24°',
@@ -1378,62 +1476,82 @@ class _TenDayCard extends StatelessWidget {
         'icon': '☀',
       },
       {
-        'day': 'Wednesday',
+        'day': 'Wed',
         'high': '23°',
         'low': '17°',
         'condition': 'Cloudy',
         'icon': '☁',
       },
       {
-        'day': 'Thursday',
+        'day': 'Thu',
         'high': '21°',
         'low': '15°',
         'condition': 'Rain',
         'icon': '🌧',
       },
       {
-        'day': 'Friday',
+        'day': 'Fri',
         'high': '25°',
         'low': '18°',
         'condition': 'Partly Cloudy',
         'icon': '🌤',
       },
       {
-        'day': 'Saturday',
+        'day': 'Sat',
         'high': '27°',
         'low': '20°',
         'condition': 'Sunny',
         'icon': '☀',
       },
       {
-        'day': 'Sunday',
+        'day': 'Sun',
         'high': '24°',
         'low': '17°',
         'condition': 'Thunderstorm',
         'icon': '⛈',
       },
       {
-        'day': 'Monday',
+        'day': 'Mon',
         'high': '22°',
         'low': '16°',
         'condition': 'Cloudy',
         'icon': '☁',
       },
       {
-        'day': 'Tuesday',
+        'day': 'Tue',
         'high': '23°',
         'low': '17°',
         'condition': 'Partly Cloudy',
         'icon': '🌤',
       },
       {
-        'day': 'Wednesday',
+        'day': 'Wed',
         'high': '25°',
         'low': '18°',
         'condition': 'Sunny',
         'icon': '☀',
       },
     ];
+
+    // If backend provided ten-day forecasts, replace placeholders
+    if (payload != null && payload!['forecasts'] != null) {
+      final list = payload!['forecasts'] as List<dynamic>;
+      final mapped = <Map<String, dynamic>>[];
+      for (final item in list) {
+        final d = item as Map<String, dynamic>;
+        final date = DateTime.parse(d['date']);
+        final dayLabel = (mapped.length == 0) ? 'Today' : _shortWeekday(date.weekday);
+        final stats = d['prediction'] != null ? (d['prediction']['statistics'] ?? {}) : {};
+        mapped.add({
+          'day': dayLabel,
+          'high': stats['max_temperature_celsius'] != null ? '${(stats['max_temperature_celsius']).round()}°' : '--',
+          'low': stats['min_temperature_celsius'] != null ? '${(stats['min_temperature_celsius']).round()}°' : '--',
+          'condition': d['prediction'] != null ? (d['prediction']['statistics']['condition'] ?? '—') : '—',
+          'icon': '☀',
+        });
+      }
+      if (mapped.isNotEmpty) days = mapped;
+    }
 
     return Container(
       width: double.infinity,
@@ -1448,71 +1566,83 @@ class _TenDayCard extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '10-Day Forecast',
-            style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              '10-Day Forecast',
+              style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
-          const SizedBox(height: 8),
-          Column(
-            children: [
-              for (int i = 0; i < days.length; i++)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: i == days.length - 1
-                            ? const Color(0x00000000)
-                            : const Color(0xFFE8E4F3),
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        days[i]['icon'] as String,
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 110,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (int i = 0; i < days.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(left: i == 0 ? 8 : 12, right: i == days.length - 1 ? 8 : 0),
+                      child: Container(
+                        width: 140,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: i == 0 ? const Color(0xFFFBF7EE) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF1EEF6)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              days[i]['day'] as String,
-                              style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  days[i]['day'] as String,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2D2D2D)),
+                                ),
+                                Text(
+                                  days[i]['icon'] as String,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ],
                             ),
                             Text(
                               days[i]['condition'] as String,
-                              style: const TextStyle(
-                                color: Color(0xFF6B6B6B),
-                                fontSize: 12,
-                              ),
+                              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  days[i]['high'] as String,
+                                  style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  days[i]['low'] as String,
+                                  style: const TextStyle(color: Color(0xFF9B9B9B)),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            days[i]['high'] as String,
-                            style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            days[i]['low'] as String,
-                            style: const TextStyle(color: Color(0xFF6B6B6B)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+                    ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

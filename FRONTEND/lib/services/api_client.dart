@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 
 /// Central API client that injects Authorization header when token exists.
 class ApiClient {
@@ -31,10 +32,10 @@ class ApiClient {
     final res = await get(path, extraHeaders: extraHeaders);
     final parsed = _handleResponse(res);
     try {
-      // Log the JSON response for visibility in the frontend terminal / browser console
-      print('API GET $path response: ${jsonEncode(parsed)}');
+      // Log the JSON response only in debug mode so production logs stay clean
+      if (kDebugMode) debugPrint('API GET $path response: ${jsonEncode(parsed)}');
     } catch (_) {
-      print('API GET $path response: (unserializable) $parsed');
+      if (kDebugMode) debugPrint('API GET $path response: (unserializable) $parsed');
     }
     return parsed;
   }
@@ -51,9 +52,9 @@ class ApiClient {
     final res = await post(path, body: body, extraHeaders: extraHeaders);
     final parsed = _handleResponse(res);
     try {
-      print('API POST $path response: ${jsonEncode(parsed)}');
+      if (kDebugMode) debugPrint('API POST $path response: ${jsonEncode(parsed)}');
     } catch (_) {
-      print('API POST $path response: (unserializable) $parsed');
+      if (kDebugMode) debugPrint('API POST $path response: (unserializable) $parsed');
     }
     return parsed;
   }

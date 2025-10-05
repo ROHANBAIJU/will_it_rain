@@ -112,7 +112,11 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         children: [
           // ===== Hero Weather Card =====
-          _HeroWeather(),
+          _HeroWeather(
+            location: _searchController.text.isNotEmpty ? _searchController.text : 'Current location',
+            data: _currentWeatherData,
+            loading: _loadingCurrentWeather,
+          ),
 
           const SizedBox(height: 12),
 
@@ -609,8 +613,128 @@ class _DashboardPageState extends State<DashboardPage> {
 // ====== HERO WEATHER CARD ======
 
 class _HeroWeather extends StatelessWidget {
+  final Map<String, dynamic>? data;
+  final bool loading;
+  final String? location;
+
+  const _HeroWeather({this.data, this.loading = false, this.location});
+
   @override
   Widget build(BuildContext context) {
+    // Extract live values or fall back to placeholders.
+    // Be tolerant of different backend key names.
+    String fmtNum(dynamic v) {
+      if (v == null) return '--';
+      double? asNum;
+      if (v is double) asNum = v;
+      else if (v is int) asNum = v.toDouble();
+      else if (v is String) asNum = double.tryParse(v);
+
+      // Treat sentinel/unrealistic numbers (like -999) as missing
+      if (asNum == null) return '--';
+      if (asNum <= -500) return '--';
+
+      return asNum.round().toString();
+    }
+
+    final tempCandidates = [
+      () => data?['temperature']?['celsius'],
+      () => data?['temp_c'],
+      () => data?['temperature_celsius'],
+      () => data?['temp'],
+    ];
+    String tempC = '--';
+    for (final c in tempCandidates) {
+      final v = c();
+      if (v != null) {
+        tempC = fmtNum(v);
+        break;
+      }
+    }
+
+    final condition = () {
+      final c = data?['condition'] ?? data?['description'] ?? data?['weather'];
+      if (c == null) return 'unknown';
+      return c.toString().toLowerCase();
+    }();
+
+    // Friendly label and icon mapping
+    String conditionLabel() {
+      if (condition.contains('partly')) return 'Partly cloudy';
+      if (condition.contains('cloud')) return 'Cloudy';
+      if (condition.contains('sun') || condition.contains('clear')) return 'Sunny';
+      if (condition.contains('rain')) return 'Rainy';
+      if (condition.contains('snow')) return 'Snowy';
+      return condition[0].toUpperCase() + condition.substring(1);
+    }
+
+    IconData conditionIcon() {
+      if (condition.contains('partly') || condition.contains('cloud')) return Icons.cloud;
+      if (condition.contains('rain')) return Icons.beach_access; // rain umbrella-like
+      if (condition.contains('snow')) return Icons.ac_unit;
+      return Icons.wb_sunny;
+    }
+
+    Color conditionColor() {
+      if (condition.contains('partly') || condition.contains('cloud')) return const Color(0xFF90A4AE);
+      if (condition.contains('rain')) return const Color(0xFF2196F3);
+      if (condition.contains('snow')) return const Color(0xFF81D4FA);
+      return const Color(0xFFFACC15);
+    }
+
+    // Humidity
+    final humidityCandidates = [() => data?['humidity'], () => data?['humidity_percent'], () => data?['average_humidity_percent']];
+    String humidity = '--';
+    for (final c in humidityCandidates) {
+      final v = c();
+      if (v != null) {
+        humidity = fmtNum(v);
+        break;
+      }
+    }
+
+    // Wind speed (prefer km/h). Convert from m/s to km/h when keys indicate meters-per-second
+    final windCandidates = [
+      () => data?['wind_speed'],
+      () => data?['wind_kph'],
+      () => data?['average_wind_speed_mps'],
+      () => data?['wind']
+    ];
+    String wind = '--';
+    for (final c in windCandidates) {
+      final v = c();
+      if (v != null) {
+        // If the key name contains 'mps' or 'm/s' treat the number as meters-per-second and convert to km/h
+        final raw = v;
+        double? asNum;
+        if (raw is double) asNum = raw;
+        else if (raw is int) asNum = raw.toDouble();
+        else if (raw is String) asNum = double.tryParse(raw);
+
+        if (asNum != null) {
+          // heuristic: if this candidate came from average_wind_speed_mps or looks like m/s, convert
+          if (c.toString().contains('mps') || c.toString().contains('m/s') || raw is double && asNum < 20) {
+            // convert m/s -> km/h
+            asNum = asNum * 3.6;
+          }
+          wind = asNum.round().toString();
+        } else {
+          wind = fmtNum(v);
+        }
+        break;
+      }
+    }
+
+    // Precipitation probability
+    final precipCandidates = [() => data?['precipitation_probability_percent'], () => data?['precipitation_probability'], () => data?['precipitation'], () => data?['rain_probability']];
+    String rainProb = '--';
+    for (final c in precipCandidates) {
+      final v = c();
+      if (v != null) {
+        rainProb = fmtNum(v);
+        break;
+      }
+    }
     return Container(
       // Clean white card with purple gradient accent
       decoration: BoxDecoration(
@@ -631,7 +755,8 @@ class _HeroWeather extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            height: 180,
+            // Increase the purple header height to give the hero card more visual weight
+            height: 260,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -658,20 +783,28 @@ class _HeroWeather extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: const [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'New York, NY',
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ],
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      color: Colors.white,
+                      size: 16,
                     ),
+                    const SizedBox(width: 6),
+                    // Ellipsize long locations and show full name on hover/tap via Tooltip
+                    Flexible(
+                      child: Tooltip(
+                        message: location ?? 'Current location',
+                        child: Text(
+                          location ?? 'Current location',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -714,40 +847,52 @@ class _HeroWeather extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '22°',
+                                    '${tempC}°',
                                     style: TextStyle(
-                                      color: const Color(0xFF2D2D2D),
-                                      fontSize: isSmallScreen ? 48 : 64,
-                                      fontWeight: FontWeight.w300,
+                                      color: Colors.white,
+                                      fontSize: isSmallScreen ? 52 : 72,
+                                      fontWeight: FontWeight.w600,
+                                      shadows: [
+                                        Shadow(color: Colors.black26, offset: Offset(0, 2), blurRadius: 4),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     'C',
                                     style: TextStyle(
-                                      color: const Color(0xFF6B6B6B),
+                                      color: Colors.white.withOpacity(0.95),
                                       fontSize: isSmallScreen ? 18 : 24,
+                                      shadows: [
+                                        Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 3),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Partly Cloudy',
+                                conditionLabel(),
                                 style: TextStyle(
-                                  color: const Color(0xFF6B6B6B),
-                                  fontSize: isSmallScreen ? 16 : 18,
+                                  color: Colors.white.withOpacity(0.95),
+                                  fontSize: isSmallScreen ? 16 : 20,
+                                  fontWeight: FontWeight.w600,
+                                  shadows: [
+                                    Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 3),
+                                  ],
                                 ),
                               ),
                               const SizedBox(height: 6),
                               _MiniStat(
                                 icon: Icons.thermostat,
-                                label: 'Feels like 25°',
+                                label: 'Feels like ${tempC}°',
+                                color: Colors.white70,
                               ),
                               const SizedBox(height: 4),
                               _MiniStat(
-                                icon: Icons.visibility,
-                                label: '10km visibility',
+                                icon: Icons.opacity,
+                                label: '${humidity}% humidity',
+                                color: Colors.white70,
                               ),
                             ],
                           ),
@@ -768,41 +913,47 @@ class _HeroWeather extends StatelessWidget {
                               child: Container(
                                 width: isSmallScreen ? 48 : 64,
                                 height: isSmallScreen ? 48 : 64,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFFFACC15),
+                                  color: conditionColor(),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  conditionIcon(),
+                                  color: Colors.white,
+                                  size: isSmallScreen ? 28 : 36,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.umbrella,
                                   size: 16,
-                                  color: Color(0xFF7C6BAD),
+                                  color: condition.contains('rain') ? const Color(0xFF1976D2) : const Color(0xFF7C6BAD),
                                 ),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Text(
-                                  '15% rain',
-                                  style: TextStyle(color: Color(0xFF6B6B6B)),
+                                  '${rainProb == '--' ? '0' : rainProb}% rain',
+                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 6),
                             Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(
+                              children: [
+                                const Icon(
                                   Icons.air,
                                   size: 16,
                                   color: Color(0xFF7C6BAD),
                                 ),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Text(
-                                  '12 km/h',
-                                  style: TextStyle(color: Color(0xFF6B6B6B)),
+                                  '${wind == '--' ? '--' : wind + ' km/h'}',
+                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
                                 ),
                               ],
                             ),
@@ -813,97 +964,127 @@ class _HeroWeather extends StatelessWidget {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
-                // Quick Stats grid - Make responsive
+                // Quick Stats grid - show live values coming from the same `data` as temperature
                 const Divider(color: Color(0xFFE8E4F3)),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isSmallScreen = constraints.maxWidth < 400;
+
+                    // helper: format numbers and treat sentinel values as missing
+                    String fmtQuick(dynamic v) {
+                      if (v == null) return '--';
+                      double? n;
+                      if (v is double) n = v;
+                      else if (v is int) n = v.toDouble();
+                      else if (v is String) n = double.tryParse(v);
+                      if (n == null) return '--';
+                      if (n <= -500) return '--';
+                      return n.round().toString();
+                    }
+
+                    String fmtTime(dynamic v) {
+                      if (v == null) return '--';
+                      try {
+                        if (v is String) {
+                          final hhmm = RegExp(r"^(\d{1,2}:\d{2})");
+                          final m = hhmm.firstMatch(v);
+                          if (m != null) return m.group(1)!;
+                          final dt = DateTime.parse(v).toLocal();
+                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+                        }
+                        if (v is int) {
+                          final dt = DateTime.fromMillisecondsSinceEpoch(v * 1000).toLocal();
+                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+                        }
+                        if (v is double) {
+                          final dt = DateTime.fromMillisecondsSinceEpoch((v * 1000).toInt()).toLocal();
+                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+                        }
+                      } catch (_) {}
+                      return '--';
+                    }
+
+                    // UV index candidates from NASA POWER / other backends
+                    final uvCandidates = [() => data?['uv_index'], () => data?['uv'], () => data?['uv_max'], () => data?['uv_index_max']];
+                    String uv = '--';
+                    for (final c in uvCandidates) {
+                      final v = c();
+                      if (v != null) {
+                        uv = fmtQuick(v);
+                        break;
+                      }
+                    }
+
+                    // Humidity (we already computed humidity earlier)
+                    final humidityQuick = humidity != '--' ? humidity + '%' : '--';
+
+                    // Pressure candidates
+                    final pressureCandidates = [() => data?['pressure'], () => data?['pressure_hpa'], () => data?['pressure_mbar'], () => data?['sea_level_pressure']];
+                    String pressure = '--';
+                    for (final c in pressureCandidates) {
+                      final v = c();
+                      if (v != null) {
+                        pressure = fmtQuick(v);
+                        break;
+                      }
+                    }
+
+                    // Sunrise/time candidates
+                    final sunriseCandidates = [() => data?['sunrise'], () => data?['sunrise_local'], () => data?['astronomy']?['sunrise'], () => data?['sunrise_time']];
+                    String sunrise = '--';
+                    for (final c in sunriseCandidates) {
+                      final v = c();
+                      if (v != null) {
+                        sunrise = fmtTime(v);
+                        break;
+                      }
+                    }
+
                     if (isSmallScreen) {
-                      // Stack vertically on small screens
                       return Column(
-                        children: const [
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Row(
                             children: [
-                              Expanded(
-                                child: _QuickStat(
-                                  value: 'UV 7',
-                                  label: 'High',
-                                  color: Color(0xFFFACC15),
-                                ),
+                              Flexible(
+                                child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15)),
                               ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: _QuickStat(
-                                  value: '68%',
-                                  label: 'Humidity',
-                                  color: Color(0xFF06B6D4),
-                                ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: _QuickStat(value: humidityQuick, label: 'Humidity', color: const Color(0xFF06B6D4)),
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
-                              Expanded(
-                                child: _QuickStat(
-                                  value: '1013',
-                                  label: 'Pressure (hPa)',
-                                  color: Color(0xFF10B981),
-                                ),
+                              Flexible(
+                                child: _QuickStat(value: pressure == '--' ? '--' : pressure, label: 'Pressure (hPa)', color: const Color(0xFF10B981)),
                               ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: _QuickStat(
-                                  value: '6:45',
-                                  label: 'Sunrise',
-                                  color: Color(0xFFA78BFA),
-                                ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA)),
                               ),
                             ],
-                          ),
-                        ],
-                      );
-                    } else {
-                      // Horizontal layout on larger screens
-                      return Row(
-                        children: const [
-                          Expanded(
-                            child: _QuickStat(
-                              value: 'UV 7',
-                              label: 'High',
-                              color: Color(0xFFFACC15),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickStat(
-                              value: '68%',
-                              label: 'Humidity',
-                              color: Color(0xFF06B6D4),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickStat(
-                              value: '1013',
-                              label: 'Pressure (hPa)',
-                              color: Color(0xFF10B981),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickStat(
-                              value: '6:45',
-                              label: 'Sunrise',
-                              color: Color(0xFFA78BFA),
-                            ),
                           ),
                         ],
                       );
                     }
+
+                    return Row(
+                      children: [
+                        Flexible(child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15))),
+                        const SizedBox(width: 8),
+                        Flexible(child: _QuickStat(value: humidityQuick, label: 'Humidity', color: const Color(0xFF06B6D4))),
+                        const SizedBox(width: 8),
+                        Flexible(child: _QuickStat(value: pressure == '--' ? '--' : pressure, label: 'Pressure (hPa)', color: const Color(0xFF10B981))),
+                        const SizedBox(width: 8),
+                        Flexible(child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA))),
+                      ],
+                    );
                   },
                 ),
 
@@ -1335,17 +1516,18 @@ class _TenDayCard extends StatelessWidget {
 class _MiniStat extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _MiniStat({required this.icon, required this.label});
+  final Color? color;
+  const _MiniStat({required this.icon, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF7C6BAD)),
+        Icon(icon, size: 16, color: color ?? const Color(0xFF7C6BAD)),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
+          style: TextStyle(color: color ?? const Color(0xFF6B6B6B), fontSize: 12),
         ),
       ],
     );

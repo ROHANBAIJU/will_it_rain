@@ -4,7 +4,7 @@ Fetches real-time weather data from NASA POWER API
 """
 
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 class CurrentWeatherService:
@@ -25,10 +25,10 @@ class CurrentWeatherService:
             Dictionary with current weather data
         """
         try:
-            # Get today's date
-            today = datetime.now()
-            yesterday = datetime.now().replace(day=today.day - 1)
-            
+            # Use safe date arithmetic to get yesterday and today
+            today = datetime.utcnow()
+            yesterday = today - timedelta(days=1)
+
             start_date = yesterday.strftime("%Y%m%d")
             end_date = today.strftime("%Y%m%d")
             
@@ -59,15 +59,36 @@ class CurrentWeatherService:
             cloud_data = properties.get("CLOUD_AMT", {})
             pressure_data = properties.get("PS", {})
             
-            # Get latest values
+            # Get latest values (may be missing). Use dict.get safely.
             latest_date = end_date
-            
-            temperature = temp_data.get(latest_date, 0)
-            precipitation = precip_data.get(latest_date, 0)
-            humidity = humidity_data.get(latest_date, 0)
-            wind_speed = wind_data.get(latest_date, 0)
-            cloud_cover = cloud_data.get(latest_date, 0)
-            pressure = pressure_data.get(latest_date, 0)
+
+            def _safe_get(d, key):
+                try:
+                    return d.get(key)
+                except Exception:
+                    return None
+
+            temperature = _safe_get(temp_data, latest_date)
+            precipitation = _safe_get(precip_data, latest_date)
+            humidity = _safe_get(humidity_data, latest_date)
+            wind_speed = _safe_get(wind_data, latest_date)
+            cloud_cover = _safe_get(cloud_data, latest_date)
+            pressure = _safe_get(pressure_data, latest_date)
+
+            # If NASA returns sentinel values like -999 (or other unrealistic numbers), treat as missing
+            def _is_unrealistic(v):
+                if v is None:
+                    return True
+                try:
+                    num = float(v)
+                    # Anything below -500 is almost certainly a sentinel/error
+                    return num <= -500
+                except Exception:
+                    return True
+
+            if any(_is_unrealistic(x) for x in [temperature, precipitation, humidity, wind_speed, cloud_cover, pressure]):
+                print("⚠️ CurrentWeatherService: API returned missing/unrealistic values, falling back to local defaults")
+                return CurrentWeatherService._get_fallback_data(lat, lon)
             
             # Determine weather condition
             condition = CurrentWeatherService._determine_condition(
@@ -75,21 +96,18 @@ class CurrentWeatherService:
             )
             
             return {
-                "location": {
-                    "lat": lat,
-                    "lon": lon
-                },
+                "location": {"lat": lat, "lon": lon},
                 "timestamp": today.isoformat(),
                 "temperature": {
-                    "celsius": round(temperature, 1),
-                    "fahrenheit": round((temperature * 9/5) + 32, 1)
+                    "celsius": round(float(temperature), 1),
+                    "fahrenheit": round((float(temperature) * 9/5) + 32, 1)
                 },
                 "condition": condition,
-                "precipitation": round(precipitation, 2),
-                "humidity": round(humidity, 1),
-                "wind_speed": round(wind_speed, 1),
-                "cloud_cover": round(cloud_cover, 1),
-                "pressure": round(pressure, 1),
+                "precipitation": round(float(precipitation), 2),
+                "humidity": round(float(humidity), 1),
+                "wind_speed": round(float(wind_speed), 1),
+                "cloud_cover": round(float(cloud_cover), 1),
+                "pressure": round(float(pressure), 1),
                 "description": CurrentWeatherService._get_description(condition)
             }
             

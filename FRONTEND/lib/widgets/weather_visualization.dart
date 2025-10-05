@@ -236,7 +236,7 @@ class WeatherDataVisualization extends StatelessWidget {
           const Divider(height: 24),
           _buildMetricRow(
             Icons.check_circle_outline,
-            'Confidence',
+            'AI Confidence Score',
             '${(((statistics['confidence_score'] ?? statistics['confidence'] ?? 0.0) as num) * 100.0).toStringAsFixed(1)}%',
             const Color(0xFF9B59B6),
           ),

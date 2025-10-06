@@ -937,12 +937,12 @@ class _HeroWeather extends StatelessWidget {
                                 Icon(
                                   Icons.umbrella,
                                   size: 16,
-                                  color: condition.contains('rain') ? const Color(0xFF1976D2) : const Color(0xFF7C6BAD),
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '${rainProb == '--' ? '0' : rainProb}% rain',
-                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
@@ -953,12 +953,12 @@ class _HeroWeather extends StatelessWidget {
                                 const Icon(
                                   Icons.air,
                                   size: 16,
-                                  color: Color(0xFF7C6BAD),
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   wind == '--' ? '--' : '$wind km/h',
-                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),

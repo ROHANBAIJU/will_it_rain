@@ -41,7 +41,9 @@ class ReasoningAgent:
         statistics: Dict[str, Any],
         confidence_score: float,
         missing_data_alert: Optional[Dict[str, Any]] = None,
-        activity: Optional[str] = None
+        activity: Optional[str] = None,
+        part_of_day: Optional[str] = None,
+        already_passed: Optional[bool] = None
     ) -> str:
         """
         Build a comprehensive prompt for Gemini with all weather context.
@@ -78,33 +80,56 @@ class ReasoningAgent:
         activity_context = ""
         if activity:
             activity_context = f"\n\n**Planned Activity**: {activity.title()}\nProvide specific recommendations for this activity considering the weather conditions."
+        # Part of day context
+        part_of_day_context = ""
+        if part_of_day:
+            part_of_day_context = f"\n\n**Part of day**: {part_of_day.replace('_', ' ').title()}"
+
+        # Tense guidance: make instruction explicit and provide examples so the model reliably
+        # uses past tense when the event already occurred.
+        if already_passed:
+            tense_instruction = (
+                "ALREADY_PASSED: True. The requested date/time has already occurred. "
+                "Begin the response by clearly stating that the event has passed (for example: 'Update: The requested time has passed. Observed conditions:'). "
+                "Describe observed outcomes in the past tense (use verbs like 'was', 'rained', 'had', 'experienced'). "
+                "Do NOT phrase observations as future predictions. Keep the message concise and factual."
+            )
+        else:
+            tense_instruction = (
+                "ALREADY_PASSED: False. The requested date/time is upcoming or ongoing. "
+                "Use present or future tense when describing expected conditions (for example: 'there will be showers', 'expect pleasant temperatures')."
+            )
         
         prompt = f"""You are AI Nimbus, a friendly and knowledgeable weather assistant helping someone plan their day.
 
-**Location**: Latitude {lat}, Longitude {lon}
-**Date**: {month_name} {day}
-**Historical Data**: Based on {data_years} years of weather records
-{activity_context}
+        **Location**: Latitude {lat}, Longitude {lon}
+        **Date**: {month_name} {day}
+        **Historical Data**: Based on {data_years} years of weather records
+        {activity_context}{part_of_day_context}
 
-**Weather Statistics:**
-- Precipitation Probability: {rain_prob:.1f}%
-- Average Rainfall: {avg_precip:.1f}mm
-- Temperature Range: {min_temp:.1f}°C to {max_temp:.1f}°C (avg: {avg_temp:.1f}°C)
-- Wind Speed: {wind_speed:.1f} m/s
-- Humidity: {humidity:.1f}%
-- Prediction Confidence: {confidence_score:.0%}
-{missing_context}
+        {tense_instruction}
 
-**Your Task:**
-Provide a natural, conversational weather insight in 3-4 sentences that includes:
-1. Rain likelihood in simple terms (e.g., "unlikely to rain", "high chance of showers")
-2. Temperature description (e.g., "pleasant weather", "hot day", "cool evening")
-3. Practical recommendation for the day (clothing, activities, precautions)
-4. {f"Specific advice for {activity}" if activity else "General activity suggestions"}
-5. Mention the place name (if you can determine it from coordinates), otherwise say "your area"
-Keep it friendly, concise, and actionable. Speak directly to the user (use "you" and "your").
-"""
-        
+        NOTE: If ALREADY_PASSED is True, the first sentence should make that explicit and use past-tense phrasing.
+
+        **Weather Statistics:**
+        - Precipitation Probability: {rain_prob:.1f}%
+        - Average Rainfall: {avg_precip:.1f}mm
+        - Temperature Range: {min_temp:.1f}°C to {max_temp:.1f}°C (avg: {avg_temp:.1f}°C)
+        - Wind Speed: {wind_speed:.1f} m/s
+        - Humidity: {humidity:.1f}%
+        - Prediction Confidence: {confidence_score:.0%}
+        {missing_context}
+
+        **Your Task:**
+        Provide a natural, conversational weather insight in 3-4 sentences that includes:
+        1. Rain likelihood in simple terms (e.g., "unlikely to rain", "high chance of showers")
+        2. Temperature description (e.g., "pleasant weather", "hot day", "cool evening")
+        3. Practical recommendation for the day (clothing, activities, precautions)
+        4. {f"Specific advice for {activity}" if activity else "General activity suggestions"}
+        5. Mention the place name (determine it from coordinates)
+        Keep it friendly, concise, and actionable. Speak directly to the user (use "you" and "your").
+        """
+
         return prompt
     
     
@@ -116,7 +141,9 @@ Keep it friendly, concise, and actionable. Speak directly to the user (use "you"
         statistics: Dict[str, Any],
         confidence_score: float,
         missing_data_alert: Optional[Dict[str, Any]] = None,
-        activity: Optional[str] = None
+        activity: Optional[str] = None,
+        part_of_day: Optional[str] = None,
+        already_passed: Optional[bool] = None
     ) -> Dict[str, Any]:
         """
         Generate AI-powered weather insight using Gemini.
@@ -141,7 +168,9 @@ Keep it friendly, concise, and actionable. Speak directly to the user (use "you"
                 statistics=statistics,
                 confidence_score=confidence_score,
                 missing_data_alert=missing_data_alert,
-                activity=activity
+                activity=activity,
+                part_of_day=part_of_day,
+                already_passed=already_passed
             )
             
             # Generate response

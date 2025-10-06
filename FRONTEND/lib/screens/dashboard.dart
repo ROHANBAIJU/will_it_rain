@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/footer.dart';
+// (Removed RSS/feed related imports — ClimateNewsCard replaced by AeroNimbusCard)
 
-import 'package:flutter_map/flutter_map.dart';
-
-import 'package:latlong2/latlong.dart';
-import '../services/geocoding_service.dart';
+// Map and search removed from dashboard
 import '../state/app_state.dart';
 import '../services/api_client.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
+import '../app.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,50 +23,14 @@ enum _DashTab { today, tomorrow, tenDays }
 class _DashboardPageState extends State<DashboardPage> {
   bool isCalendarOpen = false;
   _DashTab selected = _DashTab.today;
-  // Map/search state
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
-  List<PlaceSuggestion> _suggestions = [];
-  LatLng _mapCenter = LatLng(40.7128, -74.0060);
-  Marker? _selectedMarker;
-  final MapController _mapController = MapController();
-
-  late final VoidCallback _locationListener;
+  // Center coordinates used to fetch weather (map/search removed)
+  double _centerLat = 40.7128;
+  double _centerLon = -74.0060;
 
   @override
   void initState() {
     super.initState();
-    _locationListener = () async {
-      final loc = AppState.location.value;
-      if (loc == null || loc.trim().isEmpty) return;
-      try {
-        final res = await GeocodingService.search(loc.trim(), limit: 1);
-        if (res.isNotEmpty) {
-          final s = res.first;
-          if (!mounted) return;
-          setState(() {
-            _mapCenter = LatLng(s.lat, s.lon);
-            _selectedMarker = Marker(
-              point: _mapCenter,
-              width: 40,
-              height: 40,
-              builder: (ctx) => const Icon(
-                Icons.location_pin,
-                color: Colors.red,
-                size: 40,
-              ),
-            );
-            _searchController.text = s.displayName;
-          });
-          try {
-            _mapController.move(_mapCenter, 12.0);
-          } catch (_) {}
-        }
-      } catch (_) {}
-    };
-
-    // Register listener
-    AppState.location.addListener(_locationListener);
+    // (map/search removed) -- weather will be fetched for the default center
 
     // Weather state
     _loadingCurrentWeather = true;
@@ -83,7 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _loadingCurrentWeather = true);
     try {
       final data = await ApiClient.instance.getJson(
-        '/weather/current?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}',
+        '/weather/current?lat=${_centerLat}&lon=${_centerLon}',
       );
       if (!mounted) return;
       setState(() {
@@ -99,9 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   void dispose() {
-    AppState.location.removeListener(_locationListener);
-    _debounce?.cancel();
-    _searchController.dispose();
+    // Map/search listeners removed
     super.dispose();
   }
 
@@ -113,7 +75,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           // ===== Hero Weather Card =====
           _HeroWeather(
-            location: _searchController.text.isNotEmpty ? _searchController.text : 'Current location',
+            location: AppState.location.value != null && AppState.location.value!.trim().isNotEmpty ? AppState.location.value! : 'Current location',
             data: _currentWeatherData,
             loading: _loadingCurrentWeather,
           ),
@@ -155,244 +117,40 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 12),
 
-          // ===== Google Maps Placeholder =====
-          // ===== OpenStreetMap Widget =====
-          SizedBox(
-            height: 360,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Column(
-                children: [
-                  // Search bar
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: const Color(0x0DFFFFFF),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search location or use auto-locate',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.my_location),
-                                onPressed: () async {
-                                  bool serviceEnabled;
-                                  LocationPermission permission;
+          // Compact Plan Ahead card with small map
+          const SizedBox(height: 8),
+          _MiniPlanAheadCard(),
+          const SizedBox(height: 12),
 
-                                  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                                  if (!serviceEnabled) {
-                                    // Location services are not enabled
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Location services are disabled.')),
-                                    );
-                                    return;
-                                  }
-
-                                  permission = await Geolocator.checkPermission();
-                                  if (permission == LocationPermission.denied) {
-                                    permission = await Geolocator.requestPermission();
-                                    if (permission == LocationPermission.denied) {
-                                      if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Location permissions are denied.')),
-                                      );
-                                      return;
-                                    }
-                                  }
-
-                                  if (permission == LocationPermission.deniedForever) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Location permissions are permanently denied.')),
-                                    );
-                                    return;
-                                  }
-
-                                  final pos = await Geolocator.getCurrentPosition();
-                                  // Immediately update the map using device coords so marker appears
-                                  final latlon = LatLng(pos.latitude, pos.longitude);
-                                  if (!mounted) return;
-                                  setState(() {
-                                    _mapCenter = latlon;
-                                    _selectedMarker = Marker(
-                                      point: _mapCenter,
-                                      width: 40,
-                                      height: 40,
-                                      builder: (ctx) => const Icon(
-                                        Icons.location_pin,
-                                        color: Colors.red,
-                                        size: 40,
-                                      ),
-                                    );
-                                  });
-                                  try {
-                                    _mapController.move(_mapCenter, 12.0);
-                                  } catch (_) {}
-
-                                  // Then try reverse geocoding to show a friendly place name (may fail on web due to CORS)
-                                  try {
-                                    final place = await GeocodingService.reverse(pos.latitude, pos.longitude);
-                                    if (place != null) {
-                                      if (!mounted) return;
-                                      setState(() {
-                                        _searchController.text = place.displayName;
-                                      });
-                                    }
-                                  } catch (_) {
-                                    // ignore reverse geocode errors (CORS or network)
-                                  }
-                                },
-                            ),
-                          ),
-                            onSubmitted: (v) async {
-                              if (v.trim().isEmpty) return;
-                              final res = await GeocodingService.search(v.trim(), limit: 1);
-                              if (res.isNotEmpty) {
-                                final s = res.first;
-                                setState(() {
-                                  _mapCenter = LatLng(s.lat, s.lon);
-                                  _selectedMarker = Marker(
-                                    point: _mapCenter,
-                                    width: 40,
-                                    height: 40,
-                                    builder: (ctx) => const Icon(
-                                      Icons.location_pin,
-                                      color: Colors.red,
-                                      size: 40,
-                                    ),
-                                  );
-                                  _suggestions = [];
-                                  _searchController.text = s.displayName;
-                                });
-                                try {
-                                  _mapController.move(_mapCenter, 12.0);
-                                } catch (_) {}
-                              }
-                            },
-                          onChanged: (v) {
-                            if (_debounce?.isActive ?? false) _debounce!.cancel();
-                            _debounce = Timer(const Duration(milliseconds: 400), () async {
-                              if (v.trim().isEmpty) {
-                                setState(() => _suggestions = []);
-                                return;
-                              }
-                              final res = await GeocodingService.search(v.trim());
-                              setState(() => _suggestions = res);
-                            });
-                          },
-                        ),
-                        // suggestions
-                        if (_suggestions.isNotEmpty)
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 140),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: _suggestions.length,
-                              itemBuilder: (context, idx) {
-                                final s = _suggestions[idx];
-                                return ListTile(
-                                  title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
-                                  onTap: () {
-                                    // center map and add marker
-                                    setState(() {
-                                      _mapCenter = LatLng(s.lat, s.lon);
-                                      _selectedMarker = Marker(
-                                        point: _mapCenter,
-                                        width: 40,
-                                        height: 40,
-                                        builder: (ctx) => const Icon(
-                                          Icons.location_pin,
-                                          color: Colors.red,
-                                          size: 40,
-                                        ),
-                                      );
-                                      _suggestions = [];
-                                      _searchController.text = s.displayName;
-                                    });
-                                    try {
-                                      _mapController.move(_mapCenter, 12.0);
-                                    } catch (_) {}
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
+          // Aero Nimbus intro card and navigation cards
+          AeroNimbusCard(),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 110,
+                  child: _NavTile(
+                    icon: Icons.health_and_safety_outlined,
+                    title: 'Health Alerts',
+                    subtitle: 'View local health & weather alerts',
+                    onTap: (ctx) => Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 2))),
                   ),
-                  // Map
-                  Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        center: _mapCenter,
-                        zoom: 12,
-                        // Allow tapping to place a pin anywhere on the map
-                        onTap: (tapPos, latlng) async {
-                          if (!mounted) return;
-                          setState(() {
-                            _mapCenter = latlng;
-                            _selectedMarker = Marker(
-                              point: _mapCenter,
-                              width: 40,
-                              height: 40,
-                              builder: (ctx) => const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 40,
-                              ),
-                            );
-                          });
-                          try {
-                            _mapController.move(_mapCenter, 12.0);
-                          } catch (_) {}
-
-                          // Load weather for tapped coordinates
-                          _loadCurrentWeather();
-
-                          // Try reverse geocoding to a friendly name and update search box / app state
-                          try {
-                            final place = await GeocodingService.reverse(latlng.latitude, latlng.longitude);
-                            if (place != null && mounted) {
-                              setState(() {
-                                _searchController.text = place.displayName;
-                                AppState.location.value = place.displayName;
-                              });
-                            }
-                          } catch (_) {}
-                        },
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.example.aeronimbus',
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            if (_selectedMarker != null) _selectedMarker!,
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Coordinates readout
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lat: ${_mapCenter.latitude.toStringAsFixed(5)}, Lon: ${_mapCenter.longitude.toStringAsFixed(5)}',
-                          style: const TextStyle(color: Colors.black, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 110,
+                  child: _NavTile(
+                    icon: Icons.bar_chart,
+                    title: 'Compare',
+                    subtitle: 'Compare locations & dates',
+                    onTap: (ctx) => Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 3))),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
 
@@ -937,12 +695,12 @@ class _HeroWeather extends StatelessWidget {
                                 Icon(
                                   Icons.umbrella,
                                   size: 16,
-                                  color: condition.contains('rain') ? const Color(0xFF1976D2) : const Color(0xFF7C6BAD),
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '${rainProb == '--' ? '0' : rainProb}% rain',
-                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
@@ -953,12 +711,12 @@ class _HeroWeather extends StatelessWidget {
                                 const Icon(
                                   Icons.air,
                                   size: 16,
-                                  color: Color(0xFF7C6BAD),
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   wind == '--' ? '--' : '$wind km/h',
-                                  style: const TextStyle(color: Color(0xFF6B6B6B)),
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                               ],
                             ),
@@ -991,38 +749,19 @@ class _HeroWeather extends StatelessWidget {
                       return n.round().toString();
                     }
 
-                    String fmtTime(dynamic v) {
-                      if (v == null) return '--';
-                      try {
-                        if (v is String) {
-                          final hhmm = RegExp(r"^(\d{1,2}:\d{2})");
-                          final m = hhmm.firstMatch(v);
-                          if (m != null) return m.group(1)!;
-                          final dt = DateTime.parse(v).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                        if (v is int) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch(v * 1000).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                        if (v is double) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch((v * 1000).toInt()).toLocal();
-                          return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-                        }
-                      } catch (_) {}
-                      return '--';
-                    }
+                    // (removed fmtTime helper - sunrise/time quick stat replaced by cloud cover)
 
-                    // UV index candidates from NASA POWER / other backends
-                    final uvCandidates = [() => data?['uv_index'], () => data?['uv'], () => data?['uv_max'], () => data?['uv_index_max']];
-                    String uv = '--';
-                    for (final c in uvCandidates) {
+                    // Wind speed candidates from various backends
+                    final windCandidates = [() => data?['wind_speed'], () => data?['wind_speed_mps'], () => data?['wind_speed_ms'], () => data?['wind_mps'], () => data?['wind']];
+                    String wind = '--';
+                    for (final c in windCandidates) {
                       final v = c();
                       if (v != null) {
-                        uv = fmtQuick(v);
+                        wind = fmtQuick(v);
                         break;
                       }
                     }
+                    final windQuick = wind == '--' ? '--' : '$wind m/s';
 
                     // Humidity (we already computed humidity earlier)
                     final humidityQuick = humidity != '--' ? '$humidity%' : '--';
@@ -1038,16 +777,17 @@ class _HeroWeather extends StatelessWidget {
                       }
                     }
 
-                    // Sunrise/time candidates
-                    final sunriseCandidates = [() => data?['sunrise'], () => data?['sunrise_local'], () => data?['astronomy']?['sunrise'], () => data?['sunrise_time']];
-                    String sunrise = '--';
-                    for (final c in sunriseCandidates) {
+                    // Cloud cover candidates
+                    final cloudCandidates = [() => data?['cloud_cover'], () => data?['clouds'], () => data?['cloudiness']];
+                    String cloud = '--';
+                    for (final c in cloudCandidates) {
                       final v = c();
                       if (v != null) {
-                        sunrise = fmtTime(v);
+                        cloud = fmtQuick(v);
                         break;
                       }
                     }
+                    final cloudQuick = cloud == '--' ? '--' : '$cloud%';
 
                     if (isSmallScreen) {
                       return Column(
@@ -1056,7 +796,7 @@ class _HeroWeather extends StatelessWidget {
                           Row(
                             children: [
                               Flexible(
-                                child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15)),
+                                child: _QuickStat(value: windQuick, label: 'Wind Speed', color: const Color(0xFF3B82F6)),
                               ),
                               const SizedBox(width: 8),
                               Flexible(
@@ -1072,7 +812,7 @@ class _HeroWeather extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Flexible(
-                                child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA)),
+                                child: _QuickStat(value: cloudQuick, label: 'Cloud Cover', color: const Color(0xFF8B5CF6)),
                               ),
                             ],
                           ),
@@ -1082,13 +822,13 @@ class _HeroWeather extends StatelessWidget {
 
                     return Row(
                       children: [
-                        Flexible(child: _QuickStat(value: uv == '--' ? '--' : uv, label: 'UV Index', color: const Color(0xFFFACC15))),
+                        Flexible(child: _QuickStat(value: windQuick, label: 'Wind Speed', color: const Color(0xFF3B82F6))),
                         const SizedBox(width: 8),
                         Flexible(child: _QuickStat(value: humidityQuick, label: 'Humidity', color: const Color(0xFF06B6D4))),
                         const SizedBox(width: 8),
                         Flexible(child: _QuickStat(value: pressure == '--' ? '--' : pressure, label: 'Pressure (hPa)', color: const Color(0xFF10B981))),
                         const SizedBox(width: 8),
-                        Flexible(child: _QuickStat(value: sunrise, label: 'Sunrise', color: const Color(0xFFA78BFA))),
+                        Flexible(child: _QuickStat(value: cloudQuick, label: 'Cloud Cover', color: const Color(0xFF8B5CF6))),
                       ],
                     );
                   },
@@ -1378,56 +1118,56 @@ class _TenDayCard extends StatelessWidget {
         'icon': '☀',
       },
       {
-        'day': 'Wednesday',
+        'day': 'Wed',
         'high': '23°',
         'low': '17°',
         'condition': 'Cloudy',
         'icon': '☁',
       },
       {
-        'day': 'Thursday',
+        'day': 'Thu',
         'high': '21°',
         'low': '15°',
         'condition': 'Rain',
         'icon': '🌧',
       },
       {
-        'day': 'Friday',
+        'day': 'Fri',
         'high': '25°',
         'low': '18°',
         'condition': 'Partly Cloudy',
         'icon': '🌤',
       },
       {
-        'day': 'Saturday',
+        'day': 'Sat',
         'high': '27°',
         'low': '20°',
         'condition': 'Sunny',
         'icon': '☀',
       },
       {
-        'day': 'Sunday',
+        'day': 'Sun',
         'high': '24°',
         'low': '17°',
         'condition': 'Thunderstorm',
         'icon': '⛈',
       },
       {
-        'day': 'Monday',
+        'day': 'Mon',
         'high': '22°',
         'low': '16°',
         'condition': 'Cloudy',
         'icon': '☁',
       },
       {
-        'day': 'Tuesday',
+        'day': 'Tue',
         'high': '23°',
         'low': '17°',
         'condition': 'Partly Cloudy',
         'icon': '🌤',
       },
       {
-        'day': 'Wednesday',
+        'day': 'Wed',
         'high': '25°',
         'low': '18°',
         'condition': 'Sunny',
@@ -1448,71 +1188,83 @@ class _TenDayCard extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '10-Day Forecast',
-            style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              '10-Day Forecast',
+              style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
-          const SizedBox(height: 8),
-          Column(
-            children: [
-              for (int i = 0; i < days.length; i++)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: i == days.length - 1
-                            ? const Color(0x00000000)
-                            : const Color(0xFFE8E4F3),
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        days[i]['icon'] as String,
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 110,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (int i = 0; i < days.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(left: i == 0 ? 8 : 12, right: i == days.length - 1 ? 8 : 0),
+                      child: Container(
+                        width: 140,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: i == 0 ? const Color(0xFFFBF7EE) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF1EEF6)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              days[i]['day'] as String,
-                              style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w500),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  days[i]['day'] as String,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2D2D2D)),
+                                ),
+                                Text(
+                                  days[i]['icon'] as String,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ],
                             ),
                             Text(
                               days[i]['condition'] as String,
-                              style: const TextStyle(
-                                color: Color(0xFF6B6B6B),
-                                fontSize: 12,
-                              ),
+                              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  days[i]['high'] as String,
+                                  style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  days[i]['low'] as String,
+                                  style: const TextStyle(color: Color(0xFF9B9B9B)),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            days[i]['high'] as String,
-                            style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            days[i]['low'] as String,
-                            style: const TextStyle(color: Color(0xFF6B6B6B)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+                    ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -1564,6 +1316,181 @@ class _QuickStat extends StatelessWidget {
           style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
         ),
       ],
+    );
+  }
+}
+
+
+// Compact Plan Ahead card used on the dashboard
+class _MiniPlanAheadCard extends StatelessWidget {
+  const _MiniPlanAheadCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final centerLat = 40.7128;
+    final centerLon = -74.0060;
+    final now = DateTime.now();
+    final displayDate = '${now.day}/${now.month}/${now.year}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+      ),
+      child: Row(
+        children: [
+          // Small map snapshot
+          Container(
+            width: 110,
+            height: 80,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: FlutterMap(
+                options: MapOptions(center: LatLng(centerLat, centerLon), zoom: 10, interactiveFlags: InteractiveFlag.none),
+                nonRotatedChildren: [],
+                children: [
+                  TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.example.aeronimbus'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Plan Ahead', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF2D2D2D))),
+                const SizedBox(height: 4),
+                Text(
+                  'Planning ahead for events — use Nimbus AI to keep your weather plans spot on',
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 16),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(displayDate, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C6BAD)),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 1))),
+                        child: const Text('Open Plan Ahead'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        // quick action - create a sample plan ahead with defaults (could be wired to real flow)
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening full Plan Ahead...')));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 1)));
+                      },
+                      icon: const Icon(Icons.open_in_new),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Small card that shows recent climate related headlines
+class AeroNimbusCard extends StatelessWidget {
+  const AeroNimbusCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(color: const Color(0xFFF3F1FB), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.cloud, color: Color(0xFF7C6BAD), size: 36),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('About Aero Nimbus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                SizedBox(height: 6),
+                Text('Aero Nimbus helps you plan outdoor events with confidence — we combine local weather forecasts, AI-driven recommendations, and calendar integrations to surface actionable insights and alerts.' , style: TextStyle(color: Color(0xFF6B6B6B))),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Could navigate to a dedicated About page in future
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aero Nimbus — more coming soon')));
+            },
+            child: const Text('Learn more'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Navigation tile used in the dashboard to jump to other app sections
+class _NavTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final void Function(BuildContext) onTap;
+
+  const _NavTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onTap(context),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: const Color(0xFFF3F1FB), borderRadius: BorderRadius.circular(8)),
+              child: Icon(icon, color: const Color(0xFF7C6BAD)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Color(0xFF9B9B9B)),
+          ],
+        ),
+      ),
     );
   }
 }

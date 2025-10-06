@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_client.dart';
 import '../services/geocoding_service.dart';
 import 'dart:async';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 import '../widgets/weather_visualization.dart';
 
 class PlanAheadWidget extends StatefulWidget {
@@ -26,6 +29,8 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
   LatLng _mapCenter = LatLng(40.7128, -74.0060); // Default: New York
   Marker? _selectedMarker;
   DateTime? _selectedDate;
+  String _selectedTimezone = 'Asia/Kolkata';
+  String _selectedPartOfDay = 'all_day';
   
   bool _isLoading = false;
   Map<String, dynamic>? _weatherData;
@@ -35,6 +40,29 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
   void initState() {
     super.initState();
     _activityController.text = 'picnic'; // Default activity
+    // Initialize timezone database so we can do IANA-aware comparisons.
+    try {
+      tzdata.initializeTimeZones();
+      // Attempt to set the local location to the saved/default timezone.
+      final loc = tz.getLocation(_selectedTimezone);
+      tz.setLocalLocation(loc);
+    } catch (e) {
+      // If timezone DB or location isn't available for any reason, fall back to UTC.
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } catch (_) {
+        // ignore - we'll gracefully fall back in the compute method if needed
+      }
+    }
+    // load saved timezone preference
+    SharedPreferences.getInstance().then((prefs) {
+      final tz = prefs.getString('preferred_timezone');
+      if (tz != null && tz.isNotEmpty) {
+        setState(() {
+          _selectedTimezone = tz;
+        });
+      }
+    });
     // Initialize lat/lon inputs from the default map center
     _latController.text = _mapCenter.latitude.toStringAsFixed(6);
     _lonController.text = _mapCenter.longitude.toStringAsFixed(6);
@@ -85,12 +113,83 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
     super.dispose();
   }
 
+  bool _computeAlreadyPassed(DateTime date, String partOfDay, String timezone) {
+    // Use the timezone package (IANA) for correct DST-aware comparisons where possible.
+    try {
+      final loc = tz.getLocation(timezone);
+      final now = tz.TZDateTime.now(loc);
+
+      late tz.TZDateTime partEnd;
+      switch (partOfDay) {
+        case 'morning':
+          partEnd = tz.TZDateTime(loc, date.year, date.month, date.day, 12, 0);
+          break;
+        case 'noon':
+          partEnd = tz.TZDateTime(loc, date.year, date.month, date.day, 16, 0);
+          break;
+        case 'evening':
+          partEnd = tz.TZDateTime(loc, date.year, date.month, date.day, 19, 0);
+          break;
+        case 'night':
+          // night: 19:00 of selected day to 04:00 of next day
+          partEnd = tz.TZDateTime(loc, date.year, date.month, date.day, 19, 0)
+              .add(const Duration(hours: 9));
+          // The above creates a 04:00 next day by adding 9 hours to 19:00
+          break;
+        case 'all_day':
+        default:
+          partEnd = tz.TZDateTime(loc, date.year, date.month, date.day, 23, 59, 59);
+          break;
+      }
+
+      final today = tz.TZDateTime(loc, now.year, now.month, now.day);
+      final selectedDay = tz.TZDateTime(loc, date.year, date.month, date.day);
+
+      if (selectedDay.isBefore(today)) return true;
+      if (selectedDay.isAfter(today)) return false;
+
+      // selected date == today
+      if (partEnd.isBefore(now)) return true;
+      return false;
+    } catch (e) {
+      // Fallback: if timezone package isn't available or the timezone name is invalid,
+      // perform a conservative local-computer-time comparison.
+      final nowLocal = DateTime.now();
+      late DateTime partEnd;
+      switch (partOfDay) {
+        case 'morning':
+          partEnd = DateTime(date.year, date.month, date.day, 12, 0);
+          break;
+        case 'noon':
+          partEnd = DateTime(date.year, date.month, date.day, 16, 0);
+          break;
+        case 'evening':
+          partEnd = DateTime(date.year, date.month, date.day, 19, 0);
+          break;
+        case 'night':
+          partEnd = DateTime(date.year, date.month, date.day).add(const Duration(days: 1)).add(const Duration(hours: 4));
+          break;
+        case 'all_day':
+        default:
+          partEnd = DateTime(date.year, date.month, date.day, 23, 59, 59);
+          break;
+      }
+
+      final todayLocal = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+      final selectedDateLocal = DateTime(date.year, date.month, date.day);
+      if (selectedDateLocal.isBefore(todayLocal)) return true;
+      if (selectedDateLocal.isAfter(todayLocal)) return false;
+      if (partEnd.isBefore(nowLocal)) return true;
+      return false;
+    }
+  }
+
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 7)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2090, 12, 31),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -175,11 +274,23 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
     });
 
     try {
-      final dateStr = _selectedDate!.toIso8601String().split('T')[0];
-      final activity = _activityController.text.trim();
-      final path = '/predict?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}&date=$dateStr${activity.isNotEmpty ? '&activity=$activity' : ''}';
+  // compute already_passed relative to selected timezone and part-of-day
+  final dateStr = _selectedDate!.toIso8601String().split('T')[0];
+  final activity = _activityController.text.trim();
+  final alreadyPassed = _computeAlreadyPassed(_selectedDate!, _selectedPartOfDay, _selectedTimezone);
+  final body = {
+    'date': dateStr,
+    'timezone': _selectedTimezone,
+    'part_of_day': _selectedPartOfDay,
+    'already_passed': alreadyPassed,
+    // include both nested location and explicit top-level lat/lon for compatibility
+    'location': {'lat': _mapCenter.latitude, 'lon': _mapCenter.longitude},
+    'lat': _mapCenter.latitude,
+    'lon': _mapCenter.longitude,
+    if (activity.isNotEmpty) 'activity': activity,
+  };
 
-      final data = await ApiClient.instance.getJson(path);
+      final data = await ApiClient.instance.postJson('/predict', body: body);
 
       // Log the raw backend JSON to the frontend terminal (and browser console)
       try {
@@ -189,6 +300,13 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
       if (data == null) {
         throw Exception('Empty response from server');
       }
+
+      // If server returns authoritative already_passed, show it in the console for debugging
+      try {
+        if (data is Map && data.containsKey('server_already_passed')) {
+          print('Server authoritative already_passed: ${data['server_already_passed']}');
+        }
+      } catch (_) {}
 
       setState(() {
         _weatherData = data;
@@ -531,6 +649,7 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    // Date selector + timezone + part-of-day
                     Row(
                       children: [
                         Expanded(
@@ -572,8 +691,61 @@ class _PlanAheadWidgetState extends State<PlanAheadWidget> {
                           ),
                           child: const Text('Pick Date'),
                         ),
+                        const SizedBox(width: 12),
+                        // Timezone dropdown
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE5E5E5)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedTimezone,
+                              items: const [
+                                DropdownMenuItem(value: 'Asia/Kolkata', child: Text('India (IST)')),
+                                DropdownMenuItem(value: 'UTC', child: Text('UTC')),
+                                DropdownMenuItem(value: 'Europe/London', child: Text('Europe/London')),
+                                DropdownMenuItem(value: 'America/New_York', child: Text('America/New_York')),
+                                DropdownMenuItem(value: 'Asia/Tokyo', child: Text('Asia/Tokyo')),
+                              ],
+                              onChanged: (v) async {
+                                final nv = v ?? 'Asia/Kolkata';
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.setString('preferred_timezone', nv);
+                                setState(() => _selectedTimezone = nv);
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Part of day dropdown
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE5E5E5)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedPartOfDay,
+                              items: const [
+                                DropdownMenuItem(value: 'all_day', child: Text('All day')),
+                                DropdownMenuItem(value: 'morning', child: Text('Morning')),
+                                DropdownMenuItem(value: 'noon', child: Text('Noon')),
+                                DropdownMenuItem(value: 'evening', child: Text('Evening')),
+                                DropdownMenuItem(value: 'night', child: Text('Night')),
+                              ],
+                              onChanged: (v) => setState(() => _selectedPartOfDay = v ?? 'all_day'),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    Text('Predictions computed relative to: $_selectedTimezone', style: const TextStyle(fontSize: 12, color: Color(0xFF6B6B6B))),
                   ],
                 ),
               ),

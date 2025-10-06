@@ -1,11 +1,14 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
+from pydantic import BaseModel
+from typing import Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from app.core import nasa_data_handler, statistical_engine
 from app.core.reasoning_agent import get_reasoning_agent
 from app.core.verification_agent import get_verification_agent
 from app.services import firestore_service
 from app.services.current_weather_service import CurrentWeatherService
 from app.api.auth_routes import get_current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 router = APIRouter()
@@ -179,10 +182,10 @@ async def predict_weather(
                     
                     if verification_result.get('anomalies'):
                         response["verification"]["anomalies"] = verification_result['anomalies']
-                    
+
                     if ai_insight:
                         response["ai_insight"] = ai_insight
-                    
+
                     return response
                     
                 except Exception as e:
@@ -193,7 +196,7 @@ async def predict_weather(
                         cached_data['metadata']['total_years']
                     )
                     
-                    return {
+                    resp = {
                         "query": {"lat": lat, "lon": lon, "date": date},
                         "statistics": cached_data['statistics'],
                         "confidence_score": round(cached_data['confidence_score'], 2),
@@ -201,6 +204,7 @@ async def predict_weather(
                         "missing_data_alert": missing_data_alert,
                         "warning": "Could not update with latest data. Returning cached version."
                     }
+                    return resp
             
             else:
                 # ============================================================
@@ -240,7 +244,7 @@ async def predict_weather(
                 
                 if ai_insight:
                     response["ai_insight"] = ai_insight
-                
+
                 return response
         
         # ============================================================
@@ -345,7 +349,10 @@ async def predict_weather(
         
         if ai_insight:
             response["ai_insight"] = ai_insight
-        
+
+        if already_passed is not None:
+            response["server_already_passed"] = bool(already_passed)
+
         return response
 
     except ValueError as e:
@@ -354,3 +361,262 @@ async def predict_weather(
         raise HTTPException(status_code=500, detail="Server configuration error: Data file not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+
+class PredictRequest(BaseModel):
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    date: str
+    activity: Optional[str] = None
+    timezone: Optional[str] = None
+    part_of_day: Optional[str] = None
+    already_passed: Optional[bool] = None
+    # Support frontend sending location as nested object
+    location: Optional[dict] = None
+    troe_location: Optional[dict] = None
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls._populate_latlon
+
+    @classmethod
+    def _populate_latlon(cls, values):
+        # pydantic passes either a dict or Model; ensure dict
+        if isinstance(values, cls):
+            return values
+        # if lat/lon missing, try to extract from location or troe_location
+        if (values.get('lat') is None or values.get('lon') is None):
+            loc = values.get('location') or values.get('troe_location')
+            if isinstance(loc, dict):
+                if values.get('lat') is None and 'lat' in loc:
+                    values['lat'] = loc.get('lat')
+                if values.get('lon') is None and 'lon' in loc:
+                    values['lon'] = loc.get('lon')
+
+        # After attempting population, ensure lat/lon present
+        if values.get('lat') is None or values.get('lon') is None:
+            raise ValueError('lat and lon are required either top-level or inside location/troe_location')
+
+        return values
+
+
+async def _predict_core(
+    current_user: dict,
+    lat: float,
+    lon: float,
+    date: str,
+    activity: Optional[str] = None,
+    part_of_day: Optional[str] = None,
+    already_passed: Optional[bool] = None,
+):
+    """
+    Core predict logic factored out so both GET and POST endpoints can reuse it.
+    """
+    try:
+        # Log the authenticated user making the request
+        activity_text = f" for activity: {activity}" if activity else ""
+        print(f"📊 Prediction request from user: {current_user['email']} ({current_user['name']}){activity_text}")
+
+        # Fetch all historical data
+        historical_data = nasa_data_handler.get_historical_data(lat, lon, date)
+
+        # Calculate statistics
+        statistics = statistical_engine.calculate_statistics(historical_data)
+
+        if "error" in statistics:
+            raise HTTPException(status_code=404, detail=statistics["error"])
+
+        # ============================================================
+        # STAGE 1: AI VERIFICATION OF STATISTICS
+        # ============================================================
+        print("🔍 Stage 1: Verifying statistical calculations with AI...")
+        verification_result = verification_agent_instance.verify_statistics(
+            statistics=statistics,
+            location={"lat": lat, "lon": lon},
+            date=date
+        )
+
+        # Note: server_already_passed will be attached to responses after
+        # those response dicts are constructed further below.
+
+        # Check if verification flagged any issues
+        if not verification_result.get('is_valid', True):
+            print(f"⚠️ Verification flagged anomalies: {verification_result.get('anomalies', [])}")
+
+        # Calculate metadata for caching
+        current_year = datetime.now().year
+        target_year = datetime.strptime(date, "%Y-%m-%d").year
+        latest_year = int(statistics['years_analyzed'].split('-')[1])
+
+        # Determine missing years between latest available data and target year
+        if target_year > latest_year:
+            missing_years = list(range(latest_year + 1, target_year + 1))
+        else:
+            missing_years = []
+
+        # Calculate confidence score
+        confidence_score = firestore_service.calculate_confidence_score(
+            statistics['data_years_count'],
+            len(missing_years)
+        )
+
+        # Generate missing data alert if needed
+        missing_data_alert = firestore_service.get_missing_data_alert(
+            missing_years,
+            statistics['data_years_count']
+        )
+
+        # ============================================================
+        # STAGE 2: AI INSIGHT GENERATION (with verified data)
+        # ============================================================
+        print("🤖 Stage 2: Generating human-readable insight with verified data...")
+        ai_insight = reasoning_agent.generate_insight(
+            lat, lon, date,
+            statistics,
+            confidence_score,
+            missing_data_alert,
+            activity,
+            part_of_day=part_of_day,
+            already_passed=already_passed
+        )
+
+        # Save to cache with AI insight and verification status
+        firestore_service.save_prediction_to_cache(
+            lat, lon, date,
+            statistics,
+            statistics['years_analyzed'],
+            statistics['data_years_count'],
+            latest_year,
+            missing_years,
+            confidence_score,
+            ai_insight=ai_insight,
+            verification_result=verification_result  # Save verification metadata
+        )
+
+        response = {
+            "query": {"lat": lat, "lon": lon, "date": date},
+            "statistics": statistics,
+            "confidence_score": round(confidence_score, 2),
+            "cache_status": "miss",
+            "missing_data_alert": missing_data_alert,
+            "verification": {
+                "status": verification_result['status'],
+                "confidence": verification_result['confidence'],
+                "summary": verification_agent_instance.get_verification_summary(verification_result)
+            }
+        }
+
+        # Add detailed verification info if there are anomalies
+        if verification_result.get('anomalies'):
+            response["verification"]["anomalies"] = verification_result['anomalies']
+            response["verification"]["notes"] = verification_result.get('validation_notes', '')
+
+        if ai_insight:
+            response["ai_insight"] = ai_insight
+
+        return response
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Server configuration error: Data file not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+@router.post('/predict', tags=["Prediction"])
+async def predict_weather_post(payload: PredictRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Accepts a JSON body for prediction requests. Server will recompute 'already_passed'
+    using the provided IANA timezone (if any) and will use that authoritative value
+    when generating the AI insight.
+    """
+    # Ensure we have lat/lon available (frontend sometimes sends nested location)
+    if payload.lat is None or payload.lon is None:
+        loc = payload.location or payload.troe_location
+        if isinstance(loc, dict):
+            payload.lat = payload.lat or loc.get('lat')
+            payload.lon = payload.lon or loc.get('lon')
+
+    if payload.lat is None or payload.lon is None:
+        raise HTTPException(status_code=422, detail="lat and lon are required")
+
+    # Compute authoritative already_passed using server timezone data
+    tz_name = payload.timezone or 'UTC'
+    server_already_passed = None
+    try:
+        tzinfo = ZoneInfo(tz_name)
+        now = datetime.now(tzinfo)
+
+        # Determine end time for the requested part_of_day
+        part = payload.part_of_day or 'all_day'
+        # parse date parts once
+        year, month, day = [int(p) for p in payload.date.split('-')]
+        if part == 'morning':
+            part_end = datetime(year, month, day, 12, 0, tzinfo=tzinfo)
+        elif part == 'noon':
+            part_end = datetime(year, month, day, 16, 0, tzinfo=tzinfo)
+        elif part == 'evening':
+            part_end = datetime(year, month, day, 19, 0, tzinfo=tzinfo)
+        elif part == 'night':
+            # night: 19:00 selected day to 04:00 next day
+            base = datetime(year, month, day, 19, 0, tzinfo=tzinfo)
+            part_end = base + timedelta(hours=9)
+        else:
+            part_end = datetime(year, month, day, 23, 59, 59, tzinfo=tzinfo)
+
+        # Compare dates (day-based) first
+        today = datetime(now.year, now.month, now.day, tzinfo=tzinfo)
+        selected_day = datetime(int(payload.date.split('-')[0]), int(payload.date.split('-')[1]), int(payload.date.split('-')[2]), tzinfo=tzinfo)
+
+        if selected_day < today:
+            server_already_passed = True
+        elif selected_day > today:
+            server_already_passed = False
+        else:
+            server_already_passed = part_end < now
+
+    except ZoneInfoNotFoundError:
+        print(f"⚠️ Timezone not found on server: {tz_name}. Falling back to UTC for already_passed computation.")
+        try:
+            now = datetime.utcnow()
+            # simple fallback: similar to previous logic but naive
+            part = payload.part_of_day or 'all_day'
+            year, month, day = [int(p) for p in payload.date.split('-')]
+            if part == 'morning':
+                part_end = datetime(year, month, day, 12, 0)
+            elif part == 'noon':
+                part_end = datetime(year, month, day, 16, 0)
+            elif part == 'evening':
+                part_end = datetime(year, month, day, 19, 0)
+            elif part == 'night':
+                part_end = datetime(year, month, day, 19, 0) + timedelta(hours=9)
+            else:
+                part_end = datetime(year, month, day, 23, 59, 59)
+
+            today = datetime(now.year, now.month, now.day)
+            selected_day = datetime(year, month, day)
+            if selected_day < today:
+                server_already_passed = True
+            elif selected_day > today:
+                server_already_passed = False
+            else:
+                server_already_passed = part_end < now
+        except Exception:
+            server_already_passed = payload.already_passed if payload.already_passed is not None else False
+
+    # Log if client and server disagree
+    if payload.already_passed is not None and payload.already_passed != server_already_passed:
+        print(f"⚠️ Client sent already_passed={payload.already_passed} but server computed {server_already_passed}. Using server value.")
+
+    # Call core predict logic with authoritative already_passed and part_of_day
+    return await _predict_core(
+        current_user=current_user,
+        lat=payload.lat,
+        lon=payload.lon,
+        date=payload.date,
+        activity=payload.activity,
+        part_of_day=payload.part_of_day,
+        already_passed=server_already_passed
+    )

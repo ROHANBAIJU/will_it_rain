@@ -44,6 +44,12 @@ dependencies:
   http: ^0.13.6
   # Secure storage for tokens
   flutter_secure_storage: ^9.0.0
+  # XML parsing for RSS feeds
+  xml: ^6.1.0
+  # Cached network images for article thumbnails
+  cached_network_image: ^3.2.3
+  # Open URLs in the browser
+  url_launcher: ^6.1.10
 
   # Google Sign-In
   google_sign_in: ^6.1.5
@@ -53,6 +59,10 @@ dependencies:
   latlong2: ^0.8.1
 
   geolocator: ^9.0.2
+  # Timezone handling (IANA tz database)
+  timezone: ^0.8.0
+  # Lottie animations for animated weather icons
+  lottie: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -106,3 +116,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  assets:
+    - assets/lottie/sunny.json
+    - assets/lottie/cloudy.json
+    - assets/lottie/rainy.json

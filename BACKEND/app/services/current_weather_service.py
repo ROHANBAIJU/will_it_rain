@@ -6,7 +6,6 @@ Fetches real-time weather data from NASA POWER API
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-import urllib.parse
 
 class CurrentWeatherService:
     """Service to fetch current weather conditions"""
@@ -161,44 +160,3 @@ class CurrentWeatherService:
             "pressure": 101.3,
             "description": "Weather data temporarily unavailable"
         }
-
-    @staticmethod
-    def get_hourly_forecast(lat: float, lon: float, date_iso: str, timezone: str = 'Asia/Kolkata') -> Dict[str, Any]:
-        """
-        Fetch hourly forecast data from Open-Meteo (free, no key) and return hourly slots for the given date.
-        Returns a dict with 'hourly' key containing a list of hourly dicts with timestamp, temperature_c, precipitation, cloud_cover, wind_speed.
-        """
-        try:
-            base = 'https://api.open-meteo.com/v1/forecast'
-            params = {
-                'latitude': lat,
-                'longitude': lon,
-                'hourly': 'temperature_2m,precipitation,cloudcover,windspeed_10m',
-                'start_date': date_iso,
-                'end_date': date_iso,
-                'timezone': timezone
-            }
-            url = f"{base}?{urllib.parse.urlencode(params)}"
-            resp = requests.get(url, timeout=10)
-            resp.raise_for_status()
-            j = resp.json()
-            hourly = []
-            times = j.get('hourly', {}).get('time', [])
-            temps = j.get('hourly', {}).get('temperature_2m', [])
-            precs = j.get('hourly', {}).get('precipitation', [])
-            clouds = j.get('hourly', {}).get('cloudcover', [])
-            winds = j.get('hourly', {}).get('windspeed_10m', [])
-
-            for i, t in enumerate(times):
-                hourly.append({
-                    'timestamp': t,
-                    'temperature_c': temps[i] if i < len(temps) else None,
-                    'precipitation': precs[i] if i < len(precs) else None,
-                    'cloud_cover': clouds[i] if i < len(clouds) else None,
-                    'wind_speed': winds[i] if i < len(winds) else None,
-                })
-
-            return {'hourly': hourly}
-        except Exception as e:
-            print(f"⚠️ Open-Meteo hourly fetch failed: {e}")
-            return {'hourly': []}

@@ -11,11 +11,6 @@ import '../services/api_client.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
-String _shortWeekday(int weekday) {
-  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return names[(weekday - 1) % 7];
-}
-
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -79,24 +74,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
     // Load initial weather for default center
     _loadCurrentWeather();
-    // Load extended payloads
-    _loadTodayPayload();
-    _loadTomorrowPayload();
-    _load10DayPayload();
   }
 
   bool _loadingCurrentWeather = false;
   Map<String, dynamic>? _currentWeatherData;
-
-  // New: today/tomorrow/ten-day payloads
-  bool _loadingToday = false;
-  Map<String, dynamic>? _todayPayload;
-
-  bool _loadingTomorrow = false;
-  Map<String, dynamic>? _tomorrowPayload;
-
-  bool _loading10Day = false;
-  Map<String, dynamic>? _tenDayPayload;
 
   Future<void> _loadCurrentWeather() async {
     setState(() => _loadingCurrentWeather = true);
@@ -113,51 +94,6 @@ class _DashboardPageState extends State<DashboardPage> {
       // ignore errors but stop loading
       if (!mounted) return;
       setState(() => _loadingCurrentWeather = false);
-    }
-  }
-
-  Future<void> _loadTodayPayload() async {
-    setState(() => _loadingToday = true);
-    try {
-      final data = await ApiClient.instance.getJson('/weather/today?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
-      if (!mounted) return;
-      setState(() {
-        _todayPayload = data;
-        _loadingToday = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loadingToday = false);
-    }
-  }
-
-  Future<void> _loadTomorrowPayload() async {
-    setState(() => _loadingTomorrow = true);
-    try {
-      final data = await ApiClient.instance.getJson('/weather/tomorrow?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
-      if (!mounted) return;
-      setState(() {
-        _tomorrowPayload = data;
-        _loadingTomorrow = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loadingTomorrow = false);
-    }
-  }
-
-  Future<void> _load10DayPayload() async {
-    setState(() => _loading10Day = true);
-    try {
-      final data = await ApiClient.instance.getJson('/weather/10day?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}');
-      if (!mounted) return;
-      setState(() {
-        _tenDayPayload = data;
-        _loading10Day = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading10Day = false);
     }
   }
 
@@ -213,9 +149,9 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 12),
 
           // ===== Tab Content =====
-          if (selected == _DashTab.today) _TodayCard(payload: _todayPayload, loading: _loadingToday),
-          if (selected == _DashTab.tomorrow) _TomorrowCard(payload: _tomorrowPayload, loading: _loadingTomorrow),
-          if (selected == _DashTab.tenDays) _TenDayCard(payload: _tenDayPayload, loading: _loading10Day),
+          if (selected == _DashTab.today) _TodayCard(),
+          if (selected == _DashTab.tomorrow) _TomorrowCard(),
+          if (selected == _DashTab.tenDays) _TenDayCard(),
 
           const SizedBox(height: 12),
 
@@ -1203,50 +1139,18 @@ class _HeroWeather extends StatelessWidget {
 // ====== TODAY CARD ======
 
 class _TodayCard extends StatelessWidget {
-  final Map<String, dynamic>? payload;
-  final bool loading;
-  const _TodayCard({this.payload, this.loading = false});
-
   @override
   Widget build(BuildContext context) {
-    // Build hourly slots from current Asia/Kolkata time to end of day (23:00)
-    DateTime nowUtc = DateTime.now().toUtc();
-    // IST is UTC+5:30
-    final istNow = nowUtc.add(const Duration(hours: 5, minutes: 30));
-    final startHour = istNow.hour;
-    final List<Map<String, String>> hours = [];
-    for (int h = startHour; h <= 23; h++) {
-      String label;
-      if (h == istNow.hour) {
-        label = 'Now';
-      } else {
-        final isPm = h >= 12;
-        final hour12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
-        label = isPm ? '$hour12 PM' : '$hour12 AM';
-      }
-      // placeholders for temp and icon; if you have hourly data, replace here
-      hours.add({'time': label, 'temp': '--', 'icon': '⛅'});
-    }
-
-    // If payload contains hourly, map temperatures/icons from payload
-    if (payload != null && payload!['hourly'] != null) {
-      final ph = payload!['hourly'] as List<dynamic>;
-      for (int i = 0; i < ph.length; i++) {
-        final item = ph[i] as Map<String, dynamic>;
-        // Only replace matching labels (assumes today's hours)
-        if (i < hours.length) {
-          final tempVal = item['temperature_c'];
-          hours[i]['temp'] = (tempVal != null) ? '${(tempVal as num).round()}°' : (hours[i]['temp'] ?? '--');
-          // choose simple icon mapping by cloud_cover/precipitation
-          final cc = item['cloud_cover'] ?? 0;
-          final precip = item['precipitation'] ?? 0;
-          if (precip is num && precip > 1) hours[i]['icon'] = '🌧';
-          else if (cc is num && cc > 70) hours[i]['icon'] = '☁';
-          else if (cc is num && cc > 40) hours[i]['icon'] = '⛅';
-          else hours[i]['icon'] = '☀';
-        }
-      }
-    }
+    final hours = [
+      {'time': 'Now', 'temp': '22°', 'icon': '🌤'},
+      {'time': '11 AM', 'temp': '23°', 'icon': '☀'},
+      {'time': '12 PM', 'temp': '24°', 'icon': '☀'},
+      {'time': '1 PM', 'temp': '25°', 'icon': '☀'},
+      {'time': '2 PM', 'temp': '25°', 'icon': '🌤'},
+      {'time': '3 PM', 'temp': '24°', 'icon': '🌤'},
+      {'time': '4 PM', 'temp': '23°', 'icon': '☁'},
+      {'time': '5 PM', 'temp': '22°', 'icon': '☁'},
+    ];
 
     return Container(
       width: double.infinity,
@@ -1270,47 +1174,36 @@ class _TodayCard extends StatelessWidget {
             style: TextStyle(color: Color(0xFF2D2D2D), fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          // New polished horizontal hourly list
-          SizedBox(
-            height: 120,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: hours.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, idx) {
-                final h = hours[idx];
-                final bool isNow = h['time'] == 'Now';
-                return Container(
-                  width: 84,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isNow ? const Color(0xFFFBF7EE) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFF1EEF6)),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 6)),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(h['time']!, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: isNow ? const Color(0xFFFFF6EA) : const Color(0xFFF7F7FA),
-                          shape: BoxShape.circle,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final h in hours)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${h['time']}',
+                          style: const TextStyle(
+                            color: Color(0xFF6B6B6B),
+                            fontSize: 12,
+                          ),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(h['icon']!, style: const TextStyle(fontSize: 20)),
-                      ),
-                      Text(h['temp']!, style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w700)),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '${h['icon']}',
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${h['temp']}',
+                          style: const TextStyle(color: Color(0xFF2D2D2D), fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
+              ],
             ),
           ),
         ],
@@ -1322,10 +1215,6 @@ class _TodayCard extends StatelessWidget {
 // ====== TOMORROW CARD ======
 
 class _TomorrowCard extends StatelessWidget {
-  final Map<String, dynamic>? payload;
-  final bool loading;
-  const _TomorrowCard({this.payload, this.loading = false});
-
   @override
   Widget build(BuildContext context) {
     final hours = [
@@ -1453,14 +1342,9 @@ class _TomorrowCard extends StatelessWidget {
 // ====== 10-DAY CARD ======
 
 class _TenDayCard extends StatelessWidget {
-  final Map<String, dynamic>? payload;
-  final bool loading;
-  const _TenDayCard({this.payload, this.loading = false});
-
   @override
   Widget build(BuildContext context) {
-  // If payload has forecasts, map them into days
-  List<Map<String, dynamic>> days = [
+    final days = [
       {
         'day': 'Today',
         'high': '24°',
@@ -1532,26 +1416,6 @@ class _TenDayCard extends StatelessWidget {
         'icon': '☀',
       },
     ];
-
-    // If backend provided ten-day forecasts, replace placeholders
-    if (payload != null && payload!['forecasts'] != null) {
-      final list = payload!['forecasts'] as List<dynamic>;
-      final mapped = <Map<String, dynamic>>[];
-      for (final item in list) {
-        final d = item as Map<String, dynamic>;
-        final date = DateTime.parse(d['date']);
-        final dayLabel = (mapped.length == 0) ? 'Today' : _shortWeekday(date.weekday);
-        final stats = d['prediction'] != null ? (d['prediction']['statistics'] ?? {}) : {};
-        mapped.add({
-          'day': dayLabel,
-          'high': stats['max_temperature_celsius'] != null ? '${(stats['max_temperature_celsius']).round()}°' : '--',
-          'low': stats['min_temperature_celsius'] != null ? '${(stats['min_temperature_celsius']).round()}°' : '--',
-          'condition': d['prediction'] != null ? (d['prediction']['statistics']['condition'] ?? '—') : '—',
-          'icon': '☀',
-        });
-      }
-      if (mapped.isNotEmpty) days = mapped;
-    }
 
     return Container(
       width: double.infinity,

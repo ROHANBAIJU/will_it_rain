@@ -191,6 +191,3 @@ cd ../FRONTEND && flutter pub get && flutter run
 ```
 
 **Built with  using NASA data, statistical science, and AI reasoning.**
-
-
-

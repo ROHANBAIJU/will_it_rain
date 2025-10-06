@@ -24,8 +24,8 @@ class _DashboardPageState extends State<DashboardPage> {
   bool isCalendarOpen = false;
   _DashTab selected = _DashTab.today;
   // Center coordinates used to fetch weather (map/search removed)
-  double _centerLat = 40.7128;
-  double _centerLon = -74.0060;
+  final double _centerLat = 40.7128;
+  final double _centerLon = -74.0060;
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _loadingCurrentWeather = true);
     try {
       final data = await ApiClient.instance.getJson(
-        '/weather/current?lat=${_centerLat}&lon=${_centerLon}',
+        '/weather/current?lat=$_centerLat&lon=$_centerLon',
       );
       if (!mounted) return;
       setState(() {
@@ -1323,7 +1323,7 @@ class _QuickStat extends StatelessWidget {
 
 // Compact Plan Ahead card used on the dashboard
 class _MiniPlanAheadCard extends StatelessWidget {
-  const _MiniPlanAheadCard({Key? key}) : super(key: key);
+  const _MiniPlanAheadCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -1405,7 +1405,7 @@ class _MiniPlanAheadCard extends StatelessWidget {
 
 // Small card that shows recent climate related headlines
 class AeroNimbusCard extends StatelessWidget {
-  const AeroNimbusCard({Key? key}) : super(key: key);
+  const AeroNimbusCard({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../widgets/footer.dart';
 
-import 'package:flutter_map/flutter_map.dart';
-
-import 'package:latlong2/latlong.dart';
-import '../services/geocoding_service.dart';
+// Map and search removed from dashboard
 import '../state/app_state.dart';
 import '../services/api_client.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
+import '../app.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,50 +22,14 @@ enum _DashTab { today, tomorrow, tenDays }
 class _DashboardPageState extends State<DashboardPage> {
   bool isCalendarOpen = false;
   _DashTab selected = _DashTab.today;
-  // Map/search state
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
-  List<PlaceSuggestion> _suggestions = [];
-  LatLng _mapCenter = LatLng(40.7128, -74.0060);
-  Marker? _selectedMarker;
-  final MapController _mapController = MapController();
-
-  late final VoidCallback _locationListener;
+  // Center coordinates used to fetch weather (map/search removed)
+  double _centerLat = 40.7128;
+  double _centerLon = -74.0060;
 
   @override
   void initState() {
     super.initState();
-    _locationListener = () async {
-      final loc = AppState.location.value;
-      if (loc == null || loc.trim().isEmpty) return;
-      try {
-        final res = await GeocodingService.search(loc.trim(), limit: 1);
-        if (res.isNotEmpty) {
-          final s = res.first;
-          if (!mounted) return;
-          setState(() {
-            _mapCenter = LatLng(s.lat, s.lon);
-            _selectedMarker = Marker(
-              point: _mapCenter,
-              width: 40,
-              height: 40,
-              builder: (ctx) => const Icon(
-                Icons.location_pin,
-                color: Colors.red,
-                size: 40,
-              ),
-            );
-            _searchController.text = s.displayName;
-          });
-          try {
-            _mapController.move(_mapCenter, 12.0);
-          } catch (_) {}
-        }
-      } catch (_) {}
-    };
-
-    // Register listener
-    AppState.location.addListener(_locationListener);
+    // (map/search removed) -- weather will be fetched for the default center
 
     // Weather state
     _loadingCurrentWeather = true;
@@ -83,7 +46,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() => _loadingCurrentWeather = true);
     try {
       final data = await ApiClient.instance.getJson(
-        '/weather/current?lat=${_mapCenter.latitude}&lon=${_mapCenter.longitude}',
+        '/weather/current?lat=${_centerLat}&lon=${_centerLon}',
       );
       if (!mounted) return;
       setState(() {
@@ -99,9 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   void dispose() {
-    AppState.location.removeListener(_locationListener);
-    _debounce?.cancel();
-    _searchController.dispose();
+    // Map/search listeners removed
     super.dispose();
   }
 
@@ -113,7 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           // ===== Hero Weather Card =====
           _HeroWeather(
-            location: _searchController.text.isNotEmpty ? _searchController.text : 'Current location',
+            location: AppState.location.value != null && AppState.location.value!.trim().isNotEmpty ? AppState.location.value! : 'Current location',
             data: _currentWeatherData,
             loading: _loadingCurrentWeather,
           ),
@@ -155,245 +116,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 12),
 
-          // ===== Google Maps Placeholder =====
-          // ===== OpenStreetMap Widget =====
-          SizedBox(
-            height: 360,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Column(
-                children: [
-                  // Search bar
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: const Color(0x0DFFFFFF),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search location or use auto-locate',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.my_location),
-                                onPressed: () async {
-                                  bool serviceEnabled;
-                                  LocationPermission permission;
-
-                                  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                                  if (!serviceEnabled) {
-                                    // Location services are not enabled
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Location services are disabled.')),
-                                    );
-                                    return;
-                                  }
-
-                                  permission = await Geolocator.checkPermission();
-                                  if (permission == LocationPermission.denied) {
-                                    permission = await Geolocator.requestPermission();
-                                    if (permission == LocationPermission.denied) {
-                                      if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Location permissions are denied.')),
-                                      );
-                                      return;
-                                    }
-                                  }
-
-                                  if (permission == LocationPermission.deniedForever) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Location permissions are permanently denied.')),
-                                    );
-                                    return;
-                                  }
-
-                                  final pos = await Geolocator.getCurrentPosition();
-                                  // Immediately update the map using device coords so marker appears
-                                  final latlon = LatLng(pos.latitude, pos.longitude);
-                                  if (!mounted) return;
-                                  setState(() {
-                                    _mapCenter = latlon;
-                                    _selectedMarker = Marker(
-                                      point: _mapCenter,
-                                      width: 40,
-                                      height: 40,
-                                      builder: (ctx) => const Icon(
-                                        Icons.location_pin,
-                                        color: Colors.red,
-                                        size: 40,
-                                      ),
-                                    );
-                                  });
-                                  try {
-                                    _mapController.move(_mapCenter, 12.0);
-                                  } catch (_) {}
-
-                                  // Then try reverse geocoding to show a friendly place name (may fail on web due to CORS)
-                                  try {
-                                    final place = await GeocodingService.reverse(pos.latitude, pos.longitude);
-                                    if (place != null) {
-                                      if (!mounted) return;
-                                      setState(() {
-                                        _searchController.text = place.displayName;
-                                      });
-                                    }
-                                  } catch (_) {
-                                    // ignore reverse geocode errors (CORS or network)
-                                  }
-                                },
-                            ),
-                          ),
-                            onSubmitted: (v) async {
-                              if (v.trim().isEmpty) return;
-                              final res = await GeocodingService.search(v.trim(), limit: 1);
-                              if (res.isNotEmpty) {
-                                final s = res.first;
-                                setState(() {
-                                  _mapCenter = LatLng(s.lat, s.lon);
-                                  _selectedMarker = Marker(
-                                    point: _mapCenter,
-                                    width: 40,
-                                    height: 40,
-                                    builder: (ctx) => const Icon(
-                                      Icons.location_pin,
-                                      color: Colors.red,
-                                      size: 40,
-                                    ),
-                                  );
-                                  _suggestions = [];
-                                  _searchController.text = s.displayName;
-                                });
-                                try {
-                                  _mapController.move(_mapCenter, 12.0);
-                                } catch (_) {}
-                              }
-                            },
-                          onChanged: (v) {
-                            if (_debounce?.isActive ?? false) _debounce!.cancel();
-                            _debounce = Timer(const Duration(milliseconds: 400), () async {
-                              if (v.trim().isEmpty) {
-                                setState(() => _suggestions = []);
-                                return;
-                              }
-                              final res = await GeocodingService.search(v.trim());
-                              setState(() => _suggestions = res);
-                            });
-                          },
-                        ),
-                        // suggestions
-                        if (_suggestions.isNotEmpty)
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 140),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: _suggestions.length,
-                              itemBuilder: (context, idx) {
-                                final s = _suggestions[idx];
-                                return ListTile(
-                                  title: Text(s.displayName, style: const TextStyle(color: Colors.black, fontSize: 13)),
-                                  onTap: () {
-                                    // center map and add marker
-                                    setState(() {
-                                      _mapCenter = LatLng(s.lat, s.lon);
-                                      _selectedMarker = Marker(
-                                        point: _mapCenter,
-                                        width: 40,
-                                        height: 40,
-                                        builder: (ctx) => const Icon(
-                                          Icons.location_pin,
-                                          color: Colors.red,
-                                          size: 40,
-                                        ),
-                                      );
-                                      _suggestions = [];
-                                      _searchController.text = s.displayName;
-                                    });
-                                    try {
-                                      _mapController.move(_mapCenter, 12.0);
-                                    } catch (_) {}
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  // Map
-                  Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        center: _mapCenter,
-                        zoom: 12,
-                        // Allow tapping to place a pin anywhere on the map
-                        onTap: (tapPos, latlng) async {
-                          if (!mounted) return;
-                          setState(() {
-                            _mapCenter = latlng;
-                            _selectedMarker = Marker(
-                              point: _mapCenter,
-                              width: 40,
-                              height: 40,
-                              builder: (ctx) => const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 40,
-                              ),
-                            );
-                          });
-                          try {
-                            _mapController.move(_mapCenter, 12.0);
-                          } catch (_) {}
-
-                          // Load weather for tapped coordinates
-                          _loadCurrentWeather();
-
-                          // Try reverse geocoding to a friendly name and update search box / app state
-                          try {
-                            final place = await GeocodingService.reverse(latlng.latitude, latlng.longitude);
-                            if (place != null && mounted) {
-                              setState(() {
-                                _searchController.text = place.displayName;
-                                AppState.location.value = place.displayName;
-                              });
-                            }
-                          } catch (_) {}
-                        },
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.example.aeronimbus',
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            if (_selectedMarker != null) _selectedMarker!,
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Coordinates readout
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lat: ${_mapCenter.latitude.toStringAsFixed(5)}, Lon: ${_mapCenter.longitude.toStringAsFixed(5)}',
-                          style: const TextStyle(color: Colors.black, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Compact Plan Ahead card with small map
+          const SizedBox(height: 8),
+          _MiniPlanAheadCard(),
           const SizedBox(height: 12),
 
           // ===== Calendar Integration (Collapsible) =====
@@ -1558,6 +1283,89 @@ class _QuickStat extends StatelessWidget {
           style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12),
         ),
       ],
+    );
+  }
+}
+
+
+// Compact Plan Ahead card used on the dashboard
+class _MiniPlanAheadCard extends StatelessWidget {
+  const _MiniPlanAheadCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final centerLat = 40.7128;
+    final centerLon = -74.0060;
+    final now = DateTime.now();
+    final displayDate = '${now.day}/${now.month}/${now.year}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+      ),
+      child: Row(
+        children: [
+          // Small map snapshot
+          Container(
+            width: 110,
+            height: 80,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: FlutterMap(
+                options: MapOptions(center: LatLng(centerLat, centerLon), zoom: 10, interactiveFlags: InteractiveFlag.none),
+                nonRotatedChildren: [],
+                children: [
+                  TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.example.aeronimbus'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Plan Ahead', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF2D2D2D))),
+                const SizedBox(height: 4),
+                Text(
+                  'Planning ahead for events — use Nimbus AI to keep your weather plans spot on',
+                  style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 16),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(displayDate, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C6BAD)),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 1))),
+                        child: const Text('Open Plan Ahead'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        // quick action - create a sample plan ahead with defaults (could be wired to real flow)
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening full Plan Ahead...')));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 1)));
+                      },
+                      icon: const Icon(Icons.open_in_new),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

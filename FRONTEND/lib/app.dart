@@ -89,7 +89,8 @@ class _AuthGateState extends State<_AuthGate> {
 // ---------------------------------------------------------------------
 
 class MainTabs extends StatefulWidget {
-  const MainTabs({super.key});
+  final int initialIndex;
+  const MainTabs({super.key, this.initialIndex = 0});
 
   @override
   State<MainTabs> createState() => _MainTabsState();
@@ -107,6 +108,7 @@ class _MainTabsState extends State<MainTabs> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _pages =  [
       DashboardPage(),
       PlanAheadWidget(),

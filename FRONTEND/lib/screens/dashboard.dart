@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/footer.dart';
+// (Removed RSS/feed related imports — ClimateNewsCard replaced by AeroNimbusCard)
 
 // Map and search removed from dashboard
 import '../state/app_state.dart';
@@ -119,6 +120,38 @@ class _DashboardPageState extends State<DashboardPage> {
           // Compact Plan Ahead card with small map
           const SizedBox(height: 8),
           _MiniPlanAheadCard(),
+          const SizedBox(height: 12),
+
+          // Aero Nimbus intro card and navigation cards
+          AeroNimbusCard(),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 110,
+                  child: _NavTile(
+                    icon: Icons.health_and_safety_outlined,
+                    title: 'Health Alerts',
+                    subtitle: 'View local health & weather alerts',
+                    onTap: (ctx) => Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 2))),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 110,
+                  child: _NavTile(
+                    icon: Icons.bar_chart,
+                    title: 'Compare',
+                    subtitle: 'Compare locations & dates',
+                    onTap: (ctx) => Navigator.of(ctx).push(MaterialPageRoute(builder: (_) => const MainTabs(initialIndex: 3))),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
 
           // ===== Calendar Integration (Collapsible) =====
@@ -1365,6 +1398,98 @@ class _MiniPlanAheadCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Small card that shows recent climate related headlines
+class AeroNimbusCard extends StatelessWidget {
+  const AeroNimbusCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(color: const Color(0xFFF3F1FB), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.cloud, color: Color(0xFF7C6BAD), size: 36),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('About Aero Nimbus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                SizedBox(height: 6),
+                Text('Aero Nimbus helps you plan outdoor events with confidence — we combine local weather forecasts, AI-driven recommendations, and calendar integrations to surface actionable insights and alerts.' , style: TextStyle(color: Color(0xFF6B6B6B))),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Could navigate to a dedicated About page in future
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aero Nimbus — more coming soon')));
+            },
+            child: const Text('Learn more'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Navigation tile used in the dashboard to jump to other app sections
+class _NavTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final void Function(BuildContext) onTap;
+
+  const _NavTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onTap(context),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: const Color(0xFFF3F1FB), borderRadius: BorderRadius.circular(8)),
+              child: Icon(icon, color: const Color(0xFF7C6BAD)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Color(0xFF9B9B9B)),
+          ],
+        ),
       ),
     );
   }
